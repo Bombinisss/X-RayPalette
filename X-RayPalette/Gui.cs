@@ -13,6 +13,8 @@ namespace X_RayPalette
         private string _username;
         private string _password;
         private string _passwordRepeat;
+        private string _usernameRegister;
+        private string _passwordRegister;
 
         public Gui()
         {
@@ -21,6 +23,8 @@ namespace X_RayPalette
             _username = "";
             _password = "";
             _passwordRepeat = "";
+            _usernameRegister="";
+            _passwordRegister="";
         }
 
         public void SubmitUi()
@@ -78,10 +82,10 @@ namespace X_RayPalette
                     {
                         ImGui.Text("Username: ");
                         ImGui.SameLine(95);
-                        ImGui.InputText("##username##", ref _username, 128);
+                        ImGui.InputText("##usernameReg##", ref _usernameRegister, 128);
                         ImGui.Text("Password: ");
                         ImGui.SameLine(95);
-                        ImGui.InputText("##passwd##", ref _password, 128, ImGuiInputTextFlags.Password);
+                        ImGui.InputText("##passwdReg##", ref _passwordRegister, 128, ImGuiInputTextFlags.Password);
                         ImGui.Text("Confirm Pwd: ");
                         ImGui.SameLine(95);
                         ImGui.InputText("##passwd2##", ref _passwordRepeat, 128, ImGuiInputTextFlags.Password);
