@@ -16,6 +16,18 @@ namespace X_RayPalette
         private string _usernameRegister;
         private string _passwordRegister;
 
+        private string _newPatientName;
+        private string _newPatientSurname;
+        private int _newPatientSex;
+        private string _newPatientPESEL;
+        private string _newPatientPhone;
+
+        private string _newPatientCity;
+        private string _newPatientStreet;
+        private string _newPatientHouseNumber;
+        private string _newPatientFlatNumber;
+        private string _newPatientPostCode;
+        private string _newPatientCountry;
         public Gui()
         {
             _isRunning = true;
@@ -23,8 +35,20 @@ namespace X_RayPalette
             _username = "";
             _password = "";
             _passwordRepeat = "";
-            _usernameRegister="";
-            _passwordRegister="";
+            _usernameRegister = "";
+            _passwordRegister = "";
+
+            _newPatientName = "";
+            _newPatientSurname = "";
+            _newPatientSex = 1;
+            _newPatientPESEL = "";
+            _newPatientPhone = "";
+            _newPatientCity = "";
+            _newPatientStreet = "";
+            _newPatientHouseNumber = "";
+            _newPatientFlatNumber = "";
+            _newPatientPostCode = "";    
+            _newPatientCountry = "";
         }
 
         public void SubmitUi()
@@ -46,13 +70,63 @@ namespace X_RayPalette
 
                     if (ImGui.BeginTabItem("Add Patient"))
                     {
+                        ImGui.Text("Name: ");
+                        ImGui.SameLine(0);
+                        ImGui.InputText("##name##", ref _newPatientName, 128);
+                        ImGui.Text("Surname: ");
+                        ImGui.SameLine(0);
+                        ImGui.InputText("##surname##", ref _newPatientSurname, 128);
+                        ImGui.Text("Sex: ");
+                        ImGui.SameLine(0);
+
+                        ImGui.RadioButton("Men", ref _newPatientSex, 1);
+                        ImGui.SameLine(0);
+                        ImGui.RadioButton("Woman", ref _newPatientSex, 2);
+
+                        ImGui.Text("PESEL: ");
+                        ImGui.SameLine(0);
+                        ImGui.InputText("##pesel##", ref _newPatientPESEL, 11);
+                        ImGui.Text("Phone: ");
+                        ImGui.SameLine(0);
+                        ImGui.InputText("##phone##", ref _newPatientPhone, 9);
+
+                        ImGui.Text("Address");
+                        ImGui.Separator();
+                        ImGui.Text("City: ");
+                        ImGui.SameLine(0);
+                        ImGui.InputText("##city##", ref _newPatientCity, 128);
+                        ImGui.Text("Street: ");
+                        ImGui.SameLine(0);
+                        ImGui.InputText("##street##", ref _newPatientStreet, 128);
+                        ImGui.Text("House number: ");
+                        ImGui.SameLine(0);
+                        ImGui.InputText("##house##", ref _newPatientHouseNumber, 5);
+                        ImGui.Text("Flat number: ");
+                        ImGui.SameLine(0);
+                        ImGui.InputText("##flat##", ref _newPatientFlatNumber, 5);
+                        ImGui.Text("Post code: ");
+                        ImGui.SameLine(0);
+                        ImGui.InputText("##post##", ref _newPatientPostCode, 6);
+                        ImGui.Text("Country: ");
+                        ImGui.SameLine(0);
+                        ImGui.InputText("##country##", ref _newPatientCountry, 128);
+                        ImGui.Separator();
+
+                        ImGui.Text("Images");
+                        ImGui.Separator();
+                        ImGui.Button("Upload Images"); // TODO: add file dialog and upload images
+                        // TODO: display uploaded images
+                        ImGui.Separator();
+
+                        ImGui.NewLine();
+                        ImGui.Button("Add Patient"); // TODO: add patient to database
                         ImGui.EndTabItem();
                     }
-                    
+
                     if (ImGui.BeginTabItem("Dev")) //obviously will be moved in the future
                     {
                         //to do: select or drop image here and convert to long rainbow
-                        
+
                         ImGui.EndTabItem();
                     }
                 }
