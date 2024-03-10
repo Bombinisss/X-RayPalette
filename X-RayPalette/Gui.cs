@@ -23,6 +23,7 @@ namespace X_RayPalette
         private string _newPatientSurname;
         private int _newPatientSex;
         private string _newPatientPESEL;
+        private string _newPatientEmail;
         private string _newPatientPhone;
 
         private string _newPatientCity;
@@ -46,6 +47,7 @@ namespace X_RayPalette
             _newPatientSurname = "";
             _newPatientSex = 1;
             _newPatientPESEL = "";
+            _newPatientEmail = "";
             _newPatientPhone = "";
             _newPatientCity = "";
             _newPatientStreet = "";
@@ -83,46 +85,51 @@ namespace X_RayPalette
                     }
 
                     if (ImGui.BeginTabItem("Add Patient"))
-                    {
+                    { 
                         ImGui.Text("Name: ");
-                        ImGui.SameLine(0);
+                        ImGui.SameLine(110);
                         ImGui.InputText("##name##", ref _newPatientName, 128);
                         ImGui.Text("Surname: ");
-                        ImGui.SameLine(0);
+                        ImGui.SameLine(110);
                         ImGui.InputText("##surname##", ref _newPatientSurname, 128);
                         ImGui.Text("Sex: ");
-                        ImGui.SameLine(0);
+                        ImGui.SameLine(110);
 
                         ImGui.RadioButton("Men", ref _newPatientSex, 1);
-                        ImGui.SameLine(0);
+                        ImGui.SameLine(200);
                         ImGui.RadioButton("Woman", ref _newPatientSex, 2);
 
                         ImGui.Text("PESEL: ");
-                        ImGui.SameLine(0);
+                        ImGui.SameLine(110);
                         ImGui.InputText("##pesel##", ref _newPatientPESEL, 11);
+
+                        ImGui.Text("E-mail: ");
+                        ImGui.SameLine(110);
+                        ImGui.InputText("##emailadress##", ref _newPatientEmail, 128);
+
                         ImGui.Text("Phone: ");
-                        ImGui.SameLine(0);
+                        ImGui.SameLine(110);
                         ImGui.InputText("##phone##", ref _newPatientPhone, 9);
 
                         ImGui.Text("Address");
                         ImGui.Separator();
                         ImGui.Text("City: ");
-                        ImGui.SameLine(0);
+                        ImGui.SameLine(110);
                         ImGui.InputText("##city##", ref _newPatientCity, 128);
                         ImGui.Text("Street: ");
-                        ImGui.SameLine(0);
+                        ImGui.SameLine(110);
                         ImGui.InputText("##street##", ref _newPatientStreet, 128);
                         ImGui.Text("House number: ");
-                        ImGui.SameLine(0);
+                        ImGui.SameLine(110);
                         ImGui.InputText("##house##", ref _newPatientHouseNumber, 5);
                         ImGui.Text("Flat number: ");
-                        ImGui.SameLine(0);
+                        ImGui.SameLine(110);
                         ImGui.InputText("##flat##", ref _newPatientFlatNumber, 5);
                         ImGui.Text("Post code: ");
-                        ImGui.SameLine(0);
+                        ImGui.SameLine(110);
                         ImGui.InputText("##post##", ref _newPatientPostCode, 6);
                         ImGui.Text("Country: ");
-                        ImGui.SameLine(0);
+                        ImGui.SameLine(110);
                         ImGui.InputText("##country##", ref _newPatientCountry, 128);
                         ImGui.Separator();
 
