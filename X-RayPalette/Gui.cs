@@ -6,8 +6,9 @@ namespace X_RayPalette
 {
     public partial class Gui
     {
-        private const ImGuiWindowFlags Flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove |
-                                               ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoBackground;
+        private const ImGuiWindowFlags Flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
+                                               ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoBackground | 
+                                               ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.NoResize;
 
         private Sdl2Window _windowCopy;
         private bool _isRunning;
@@ -59,6 +60,16 @@ namespace X_RayPalette
             ImGui.Begin("MedApp", ref _isRunning, Flags);
             if (!_isRunning) Environment.Exit(0);
 
+            if (ImGui.BeginMenuBar())
+            {
+                if (ImGui.BeginMenu("File"))
+                {
+                    if (ImGui.MenuItem("Close", "Ctrl+W")) { _isRunning= false; }
+                    ImGui.EndMenu();
+                }
+                ImGui.EndMenuBar();
+            }
+            
             if (_loggedIn)
             {
                 if (ImGui.BeginTabBar("TabBar", ImGuiTabBarFlags.FittingPolicyResizeDown))
@@ -129,7 +140,7 @@ namespace X_RayPalette
                     if (ImGui.BeginTabItem("Dev")) //obviously will be moved in the future
                     {
                         //to do: select or drop image here and convert to long rainbow
-
+                        
                         ImGui.EndTabItem();
                     }
                 }
@@ -149,7 +160,8 @@ namespace X_RayPalette
                         if (ImGui.Button("Login"))
                         {
                             //to do: check login
-                            _windowCopy.Height = 450;
+                            _windowCopy.Height = 540;
+                            _windowCopy.Width = 960;
                             _loggedIn = true;
                         }
 
