@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using ImGuiNET;
+using Veldrid.Sdl2;
 
 namespace X_RayPalette
 {
@@ -8,6 +9,7 @@ namespace X_RayPalette
         private const ImGuiWindowFlags Flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove |
                                                ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoBackground;
 
+        private Sdl2Window _windowCopy;
         private bool _isRunning;
         private bool _loggedIn;
         private string _username;
@@ -28,8 +30,9 @@ namespace X_RayPalette
         private string _newPatientFlatNumber;
         private string _newPatientPostCode;
         private string _newPatientCountry;
-        public Gui()
+        public Gui(Sdl2Window windowCopy)
         {
+            _windowCopy = windowCopy;
             _isRunning = true;
             _loggedIn = false;
             _username = "";
@@ -114,7 +117,7 @@ namespace X_RayPalette
 
                         ImGui.Text("Images");
                         ImGui.Separator();
-                        ImGui.Button("Upload Images"); // TODO: add file dialog and upload images
+                        ImGui.Button("Upload Images"); // TODO: add file Popup and upload images
                         // TODO: display uploaded images
                         ImGui.Separator();
 
@@ -146,6 +149,7 @@ namespace X_RayPalette
                         if (ImGui.Button("Login"))
                         {
                             //to do: check login
+                            _windowCopy.Height = 450;
                             _loggedIn = true;
                         }
 
