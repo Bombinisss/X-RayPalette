@@ -109,7 +109,7 @@ namespace X_RayPalette
 
                         ImGui.Text("Phone: ");
                         ImGui.SameLine(110);
-                        ImGui.InputText("##phone##", ref _newPatientPhone, 9);
+                        ImGui.InputText("##phone##", ref _newPatientPhone, 15);
 
                         ImGui.Text("Address");
                         ImGui.Separator();
