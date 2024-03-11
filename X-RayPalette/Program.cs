@@ -38,9 +38,11 @@ namespace X_RayPalette
             var deltaTime = 0f;
             // Main application loop
 
-            var guiObject = new Gui();
+            var guiObject = new Gui(_window);
             ImGui.StyleColorsDark();
             guiObject.SetupImGuiStyle();
+
+            DarkTitleBarClass.UseImmersiveDarkMode(_window.Handle, true);
 
             while (_window.Exists)
             {
@@ -48,9 +50,10 @@ namespace X_RayPalette
                 stopwatch.Restart();
                 var snapshot = _window.PumpEvents();
                 if (!_window.Exists) break;
-                _renderer.Update(deltaTime, snapshot); // Feed the input events to our ImGui controller, which passes them through to ImGui.
+                _renderer.Update(deltaTime,
+                    snapshot); // Feed the input events to our ImGui controller, which passes them through to ImGui.
                 _keyUpdater.UpdateImGuiInput(snapshot);
-                
+
                 // ImGui window position and size
                 var viewport = ImGui.GetMainViewport();
                 ImGui.SetNextWindowPos(viewport.WorkPos);
@@ -73,9 +76,49 @@ namespace X_RayPalette
             _gd.Dispose();
         }
     }
+
+    class DarkTitleBarClass
+    {
+        [DllImport("dwmapi.dll")]
+        private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
+
+        private const int DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
+        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
+        private const int DWMWA_BORDER_COLOR = 34;
+        private const int DWMWA_CAPTION_COLOR = 35;
+
+        public static bool UseImmersiveDarkMode(IntPtr handle, bool enabled)
+        {
+            if (IsWindows10OrGreater(17763))
+            {
+                var attribute = DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1;
+                if (IsWindows10OrGreater(18985))
+                {
+                    attribute = DWMWA_USE_IMMERSIVE_DARK_MODE;
+                }
+
+                int useImmersiveDarkMode = enabled ? 1 : 0;
+                var outval = DwmSetWindowAttribute(handle, attribute, ref useImmersiveDarkMode, sizeof(int)) == 0;
+
+                var darkColor = 0x00000000;
+                outval = DwmSetWindowAttribute(handle, DWMWA_BORDER_COLOR | DWMWA_CAPTION_COLOR, ref darkColor,
+                    sizeof(int)) == 0;
+
+                return outval;
+            }
+
+            return false;
+        }
+
+        private static bool IsWindows10OrGreater(int build = -1)
+        {
+            return Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= build;
+        }
+    }
+
     public class KeyUpdater
     {
-        public void UpdateImGuiInput(InputSnapshot snapshot)  // Feed missing input events to our ImGui controller.
+        public void UpdateImGuiInput(InputSnapshot snapshot) // Feed missing input events to our ImGui controller.
         {
             ImGuiIOPtr io = ImGui.GetIO();
             io.AddMousePosEvent(snapshot.MousePosition.X, snapshot.MousePosition.Y);
@@ -95,6 +138,7 @@ namespace X_RayPalette
                 }
             }
         }
+
         private bool TryMapKey(Key key, out ImGuiKey result)
         {
             ImGuiKey KeyToImGuiKeyShortcut(Key keyToConvert, Key startKey1, ImGuiKey startKey2)
