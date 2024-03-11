@@ -39,7 +39,7 @@ namespace X_RayPalette
             var deltaTime = 0f;
             // Main application loop
 
-            var guiObject = new Gui();
+            var guiObject = new Gui(_window);
             ImGui.StyleColorsDark();
             guiObject.SetupImGuiStyle();
 
