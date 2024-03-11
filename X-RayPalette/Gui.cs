@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Drawing;
+using System.Numerics;
 using ImGuiNET;
 using Veldrid.Sdl2;
 
@@ -89,9 +90,15 @@ namespace X_RayPalette
                         ImGui.Text("Name: ");
                         ImGui.SameLine(110);
                         ImGui.InputText("##name##", ref _newPatientName, 128);
+                        ImGui.SameLine();
+                        ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
+
                         ImGui.Text("Surname: ");
                         ImGui.SameLine(110);
                         ImGui.InputText("##surname##", ref _newPatientSurname, 128);
+                        ImGui.SameLine();
+                        ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
+
                         ImGui.Text("Sex: ");
                         ImGui.SameLine(110);
 
@@ -102,6 +109,8 @@ namespace X_RayPalette
                         ImGui.Text("PESEL: ");
                         ImGui.SameLine(110);
                         ImGui.InputText("##pesel##", ref _newPatientPESEL, 11);
+                        ImGui.SameLine();
+                        ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
 
                         ImGui.Text("E-mail: ");
                         ImGui.SameLine(110);
@@ -110,7 +119,11 @@ namespace X_RayPalette
                         ImGui.Text("Phone: ");
                         ImGui.SameLine(110);
                         ImGui.InputText("##phone##", ref _newPatientPhone, 15);
+                        ImGui.SameLine();
+                        ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
 
+                        ImGui.TextColored(new Vector4(0.8f,0.20f,0.20f,0.90f),"\u002A - required field");
+                        
                         ImGui.Text("Address");
                         ImGui.Separator();
                         ImGui.Text("City: ");
