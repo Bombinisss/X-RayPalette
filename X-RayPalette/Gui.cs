@@ -150,6 +150,23 @@ namespace X_RayPalette
                         
                         ImGui.EndTabItem();
                     }
+
+                    if (_windowCopy.Width > 289)
+                    {
+                        ImGui.SameLine(_windowCopy.Width-60);
+                        if (ImGui.Button("logout"))
+                        {
+                            _loggedIn = false;
+                        }
+                    }
+                    else
+                    {
+                        if (ImGui.TabItemButton("logout"))
+                        {
+                            _loggedIn = false;
+                        }
+                    }
+                    
                 }
             }
             else
