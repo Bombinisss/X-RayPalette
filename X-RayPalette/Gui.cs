@@ -1,6 +1,5 @@
 ﻿using System.Numerics;
 using ImGuiNET;
-using X_RayPalette.Helpers;
 
 namespace X_RayPalette
 {
@@ -29,7 +28,6 @@ namespace X_RayPalette
         private string _newPatientFlatNumber;
         private string _newPatientPostCode;
         private string _newPatientCountry;
-        private PhoneAreaCode _newPatientPhoneAreaCode;
         public Gui()
         {
             _isRunning = true;
@@ -87,29 +85,10 @@ namespace X_RayPalette
 
                         ImGui.Text("PESEL: ");
                         ImGui.SameLine(0);
-                        ImGui.PushItemWidth(150);
                         ImGui.InputText("##pesel##", ref _newPatientPESEL, 11);
-                        ImGui.PopItemWidth();
                         ImGui.Text("Phone: ");
-                        ImGui.PushItemWidth(100);
-
-                        if (ImGui.BeginCombo("##phoneArea",_newPatientPhoneAreaCode==null? "Phone area": ("+" + _newPatientPhoneAreaCode.AreaCode)))
-                        {
-                            foreach (var areaCode in InputDataHelper.PhoneAreaCodes)
-                            {
-                                if (ImGui.Selectable("+" + areaCode.AreaCode + " " + areaCode.AreaName))
-                                {
-                                    _newPatientPhoneAreaCode = areaCode;
-                                }
-                            } 
-                            ImGui.EndCombo();
-                        }
-                        ImGui.PopItemWidth();
                         ImGui.SameLine(0);
-                        ImGui.PushItemWidth(150);
-                        ImGui.InputText("##phone##", ref _newPatientPhone, 15,ImGuiInputTextFlags.CharsDecimal);
-
-                        ImGui.PopItemWidth();
+                        ImGui.InputText("##phone##", ref _newPatientPhone, 9);
 
                         ImGui.Text("Address");
                         ImGui.Separator();
