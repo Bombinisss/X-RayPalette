@@ -2,6 +2,7 @@
 using System.Numerics;
 using ImGuiNET;
 using Veldrid.Sdl2;
+using X_RayPalette.Helpers;
 
 namespace X_RayPalette
 {
@@ -33,6 +34,7 @@ namespace X_RayPalette
         private string _newPatientFlatNumber;
         private string _newPatientPostCode;
         private string _newPatientCountry;
+        private PhoneAreaCode _newPatientPhoneAreaCode;
         public Gui(Sdl2Window windowCopy)
         {
             _windowCopy = windowCopy;
@@ -56,6 +58,7 @@ namespace X_RayPalette
             _newPatientFlatNumber = "";
             _newPatientPostCode = "";    
             _newPatientCountry = "";
+            _newPatientPhoneAreaCode = InputDataHelper.PhoneAreaCodes.Find(x => x.AreaCode == "48");
         }
 
         public void SubmitUi()
@@ -118,7 +121,28 @@ namespace X_RayPalette
 
                         ImGui.Text("Phone: ");
                         ImGui.SameLine(110);
-                        ImGui.InputText("##phone##", ref _newPatientPhone, 15);
+                        ImGui.PushItemWidth(150);
+                        ImGui.InputText("##pesel##", ref _newPatientPESEL, 11);
+                        ImGui.PopItemWidth();
+                        ImGui.Text("Phone: ");
+                        ImGui.SameLine(110);
+                        ImGui.PushItemWidth(50);
+                        if (ImGui.BeginCombo("##phoneArea", _newPatientPhoneAreaCode == null ? "Phone area" : ("+" + _newPatientPhoneAreaCode.AreaCode)))
+                        {
+                            foreach (var areaCode in InputDataHelper.PhoneAreaCodes)
+                            {
+                                if (ImGui.Selectable("+" + areaCode.AreaCode + " " + areaCode.AreaName))
+                                {
+                                    _newPatientPhoneAreaCode = areaCode;
+                                }
+                            }
+                            ImGui.EndCombo();
+                        }
+                        ImGui.PopItemWidth();
+                        ImGui.SameLine(0);
+                        ImGui.PushItemWidth(150);
+                        ImGui.InputText("##phone##", ref _newPatientPhone, 15, ImGuiInputTextFlags.CharsDecimal);
+
                         ImGui.SameLine();
                         ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
 
