@@ -16,6 +16,7 @@ namespace X_RayPalette
         private static ImGuiRenderer _renderer;
         private static readonly Vector3 _clearColor = new(0.0f, 0.0f, 0.0f);
         private static KeyUpdater _keyUpdater = new();
+        private static Connector _connector = new Connector();
 
         private static void Main(string[] args)
         {
