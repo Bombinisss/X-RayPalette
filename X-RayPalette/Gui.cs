@@ -14,6 +14,7 @@ namespace X_RayPalette
                                                ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.NoResize;
 
         private Sdl2Window _windowCopy;
+        public bool _opendev;
         private bool _isRunning;
         private bool _loggedIn;
         private string _username;
@@ -38,6 +39,7 @@ namespace X_RayPalette
         private PhoneAreaCode _newPatientPhoneAreaCode;
         public Gui(Sdl2Window windowCopy)
         {
+            _opendev = false;
             _windowCopy = windowCopy;
             _isRunning = true;
             _loggedIn = false;
@@ -64,6 +66,7 @@ namespace X_RayPalette
 
         public void SubmitUi()
         {
+            _opendev = false;
             ImGui.Begin("MedApp", ref _isRunning, Flags);
             if (!_isRunning) Environment.Exit(0);
 
@@ -184,17 +187,16 @@ namespace X_RayPalette
 
                     if (ImGui.BeginTabItem("Dev")) //obviously will be moved in the future
                     {
+                        _opendev = true;
                         //to do: select or drop image here and convert to long rainbow
                         if (ImGui.Button("Select Image"))
                         { 
                             
-                            NfdDialogResult path = Nfd.FileOpen(filters.CreateNewNfdFilter(), "C:\\"); //path - selected image path
+                            NfdDialogResult path = Nfd.FileOpen(Filters.CreateNewNfdFilter(), "C:\\"); //path - selected image path
                             Console.WriteLine(path.Path); //check image path
 
                         }
                         
-
-
                         ImGui.EndTabItem();
                     }
 

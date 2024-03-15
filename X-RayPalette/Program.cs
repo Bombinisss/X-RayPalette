@@ -5,9 +5,7 @@ using ImGuiNET;
 using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
-using System.Collections;
 using NativeFileDialogExtendedSharp;
-using Vortice.Direct3D11;
 
 namespace X_RayPalette
 {
@@ -40,9 +38,18 @@ namespace X_RayPalette
 
             var stopwatch = Stopwatch.StartNew();
             var deltaTime = 0f;
+
             // Main application loop
 
             var guiObject = new Gui(_window);
+            _window.DragDrop += (DragDropEvent) =>
+            {
+                if (guiObject._opendev)
+                {
+                    Console.WriteLine(DragDropEvent.File); //printing path to dropped file
+                }
+
+            };
             ImGui.StyleColorsDark();
             guiObject.SetupImGuiStyle();
 
@@ -78,6 +85,11 @@ namespace X_RayPalette
             _renderer.Dispose();
             _cl.Dispose();
             _gd.Dispose();
+        }
+
+        private static void _window_DragDrop(DragDropEvent obj)
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -206,9 +218,9 @@ namespace X_RayPalette
         }
         
     }
-    class filters
+    class Filters
     {
-        public static System.Collections.Generic.IEnumerable<NativeFileDialogExtendedSharp.NfdFilter> CreateNewNfdFilter()
+        public static IEnumerable<NfdFilter> CreateNewNfdFilter()
         {
             NfdFilter filter = new NfdFilter();
             filter.Description = "png (*.png)";
