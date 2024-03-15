@@ -5,6 +5,7 @@ using ImGuiNET;
 using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
+using NativeFileDialogExtendedSharp;
 
 namespace X_RayPalette
 {
@@ -16,6 +17,7 @@ namespace X_RayPalette
         private static ImGuiRenderer _renderer;
         private static readonly Vector3 _clearColor = new(0.0f, 0.0f, 0.0f);
         private static KeyUpdater _keyUpdater = new();
+        private static Connector _connector = new Connector();
 
         private static void Main(string[] args)
         {
@@ -36,9 +38,18 @@ namespace X_RayPalette
 
             var stopwatch = Stopwatch.StartNew();
             var deltaTime = 0f;
+
             // Main application loop
 
-            var guiObject = new Gui();
+            var guiObject = new Gui(_window);
+            _window.DragDrop += (DragDropEvent) =>
+            {
+                if (guiObject._opendev)
+                {
+                    Console.WriteLine(DragDropEvent.File); //printing path to dropped file
+                }
+
+            };
             ImGui.StyleColorsDark();
             guiObject.SetupImGuiStyle();
 
@@ -74,6 +85,11 @@ namespace X_RayPalette
             _renderer.Dispose();
             _cl.Dispose();
             _gd.Dispose();
+        }
+
+        private static void _window_DragDrop(DragDropEvent obj)
+        {
+            throw new NotImplementedException();
         }
     }
 
@@ -199,6 +215,17 @@ namespace X_RayPalette
             };
 
             return result != ImGuiKey.None;
+        }
+        
+    }
+    class Filters
+    {
+        public static IEnumerable<NfdFilter> CreateNewNfdFilter()
+        {
+            NfdFilter filter = new NfdFilter();
+            filter.Description = "png (*.png)";
+            filter.Specification = "png";
+            yield return filter;
         }
     }
 }
