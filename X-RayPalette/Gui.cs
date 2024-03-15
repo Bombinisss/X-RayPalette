@@ -3,6 +3,7 @@ using System.Numerics;
 using ImGuiNET;
 using Veldrid.Sdl2;
 using X_RayPalette.Helpers;
+using NativeFileDialogExtendedSharp;
 
 namespace X_RayPalette
 {
@@ -184,7 +185,16 @@ namespace X_RayPalette
                     if (ImGui.BeginTabItem("Dev")) //obviously will be moved in the future
                     {
                         //to do: select or drop image here and convert to long rainbow
+                        if (ImGui.Button("Select Image"))
+                        { 
+                            
+                            NfdDialogResult path = Nfd.FileOpen(filters.CreateNewNfdFilter(), "C:\\"); //path - selected image path
+                            Console.WriteLine(path.Path); //check image path
+
+                        }
                         
+
+
                         ImGui.EndTabItem();
                     }
 

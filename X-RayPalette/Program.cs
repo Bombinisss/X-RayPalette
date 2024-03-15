@@ -5,6 +5,9 @@ using ImGuiNET;
 using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
+using System.Collections;
+using NativeFileDialogExtendedSharp;
+using Vortice.Direct3D11;
 
 namespace X_RayPalette
 {
@@ -200,6 +203,17 @@ namespace X_RayPalette
             };
 
             return result != ImGuiKey.None;
+        }
+        
+    }
+    class filters
+    {
+        public static System.Collections.Generic.IEnumerable<NativeFileDialogExtendedSharp.NfdFilter> CreateNewNfdFilter()
+        {
+            NfdFilter filter = new NfdFilter();
+            filter.Description = "png (*.png)";
+            filter.Specification = "png";
+            yield return filter;
         }
     }
 }
