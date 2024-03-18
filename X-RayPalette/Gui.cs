@@ -8,12 +8,13 @@ namespace X_RayPalette
 {
     public partial class Gui
     {
-        private const ImGuiWindowFlags Flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
-                                               ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoBackground | 
-                                               ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.MenuBar;
+        private ImGuiWindowFlags _flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
+                                               ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.HorizontalScrollbar |
+                                               ImGuiWindowFlags.NoResize;
 
         private readonly Sdl2Window _windowCopy;
         public bool DevOpen;
+        private int _theme;
         private bool _isRunning;
         private bool _loggedIn;
         private string _username;
@@ -39,6 +40,7 @@ namespace X_RayPalette
         public Gui(Sdl2Window windowCopy)
         {
             DevOpen = false;
+            _theme = 0;
             _windowCopy = windowCopy;
             _isRunning = true;
             _loggedIn = false;
@@ -66,18 +68,50 @@ namespace X_RayPalette
         public void SubmitUi()
         {
             DevOpen = false;
-            ImGui.Begin("MedApp", ref _isRunning, Flags);
+            ImGui.Begin("MedApp", ref _isRunning, _flags);
             if (!_isRunning) Environment.Exit(0);
 
             if (ImGui.BeginMenuBar())
             {
-                if (ImGui.BeginMenu("File"))
-                {
-                    if (ImGui.MenuItem("Close")) { _isRunning= false; }
-                    if (ImGui.MenuItem("Settings")) { }
-                    if(_loggedIn) if (ImGui.MenuItem("Logout")) { _loggedIn= false; }
-                    ImGui.EndMenu();
-                }
+                if(_loggedIn)
+                    if (ImGui.BeginMenu("File"))
+                    {
+                        if (ImGui.MenuItem("Close")) { _isRunning= false; }
+
+                        if (ImGui.BeginMenu("Settings"))
+                        {
+                            ImGui.Text("Theme: ");
+                            ImGui.SameLine();
+
+                            ImGui.RadioButton("Light", ref _theme, 0);
+                            ImGui.SameLine();
+                            ImGui.RadioButton("Dark", ref _theme, 1);
+                            switch (_theme)
+                            {
+                                case 0:
+                                    DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, true, 0x00FFFFFF);
+                                    _flags &= ~ImGuiWindowFlags.NoBackground;
+                                    SetupImGuiStyle0();
+                                    break;
+                                case 1:
+                                    DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, true, 0x00000000);
+                                    _flags |= ImGuiWindowFlags.NoBackground;
+                                    SetupImGuiStyle1();
+                                    break;
+                            }
+
+                            ImGui.EndMenu();
+                        }
+
+                        if (ImGui.MenuItem("Logout"))
+                        {
+                            _flags &= ~ImGuiWindowFlags.MenuBar;
+                            _windowCopy.Height = 150;
+                            _windowCopy.Width = 400;
+                            _loggedIn= false;
+                        }
+                        ImGui.EndMenu();
+                    }
                 ImGui.EndMenuBar();
             }
             
@@ -217,6 +251,7 @@ namespace X_RayPalette
                         if (ImGui.Button("Login"))
                         {
                             //to do: check login
+                            _flags |= ImGuiWindowFlags.MenuBar;
                             _windowCopy.Height = 540;
                             _windowCopy.Width = 960;
                             _loggedIn = true;
