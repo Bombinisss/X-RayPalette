@@ -5,7 +5,7 @@ namespace X_RayPalette
 {
     partial class Gui
     {
-        public void SetupImGuiStyle()
+        public static void SetupImGuiStyle()
         {
             // Comfy style by Giuseppe from ImThemes
             ImGuiStylePtr style = ImGui.GetStyle();

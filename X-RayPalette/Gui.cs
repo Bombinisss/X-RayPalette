@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using System.Numerics;
+﻿using System.Numerics;
 using ImGuiNET;
 using Veldrid.Sdl2;
 using X_RayPalette.Helpers;
@@ -11,10 +10,10 @@ namespace X_RayPalette
     {
         private const ImGuiWindowFlags Flags = ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoMove |
                                                ImGuiWindowFlags.NoSavedSettings | ImGuiWindowFlags.NoBackground | 
-                                               ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.NoResize;
+                                               ImGuiWindowFlags.HorizontalScrollbar | ImGuiWindowFlags.NoResize | ImGuiWindowFlags.MenuBar;
 
-        private Sdl2Window _windowCopy;
-        public bool _opendev;
+        private readonly Sdl2Window _windowCopy;
+        public bool DevOpen;
         private bool _isRunning;
         private bool _loggedIn;
         private string _username;
@@ -26,7 +25,7 @@ namespace X_RayPalette
         private string _newPatientName;
         private string _newPatientSurname;
         private int _newPatientSex;
-        private string _newPatientPESEL;
+        private string _newPatientPesel;
         private string _newPatientEmail;
         private string _newPatientPhone;
 
@@ -39,7 +38,7 @@ namespace X_RayPalette
         private PhoneAreaCode _newPatientPhoneAreaCode;
         public Gui(Sdl2Window windowCopy)
         {
-            _opendev = false;
+            DevOpen = false;
             _windowCopy = windowCopy;
             _isRunning = true;
             _loggedIn = false;
@@ -52,7 +51,7 @@ namespace X_RayPalette
             _newPatientName = "";
             _newPatientSurname = "";
             _newPatientSex = 1;
-            _newPatientPESEL = "";
+            _newPatientPesel = "";
             _newPatientEmail = "";
             _newPatientPhone = "";
             _newPatientCity = "";
@@ -61,12 +60,12 @@ namespace X_RayPalette
             _newPatientFlatNumber = "";
             _newPatientPostCode = "";    
             _newPatientCountry = "";
-            _newPatientPhoneAreaCode = InputDataHelper.PhoneAreaCodes.Find(x => x.AreaCode == "48");
+            _newPatientPhoneAreaCode = InputDataHelper.PhoneAreaCodes.First();
         }
 
         public void SubmitUi()
         {
-            _opendev = false;
+            DevOpen = false;
             ImGui.Begin("MedApp", ref _isRunning, Flags);
             if (!_isRunning) Environment.Exit(0);
 
@@ -74,7 +73,9 @@ namespace X_RayPalette
             {
                 if (ImGui.BeginMenu("File"))
                 {
-                    if (ImGui.MenuItem("Close", "Ctrl+W")) { _isRunning= false; }
+                    if (ImGui.MenuItem("Close")) { _isRunning= false; }
+                    if (ImGui.MenuItem("Settings")) { }
+                    if(_loggedIn) if (ImGui.MenuItem("Logout")) { _loggedIn= false; }
                     ImGui.EndMenu();
                 }
                 ImGui.EndMenuBar();
@@ -115,7 +116,7 @@ namespace X_RayPalette
 
                         ImGui.Text("PESEL: ");
                         ImGui.SameLine(110);
-                        ImGui.InputText("##pesel##", ref _newPatientPESEL, 11);
+                        ImGui.InputText("##pesel##", ref _newPatientPesel, 11);
                         ImGui.SameLine();
                         ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
 
@@ -126,12 +127,12 @@ namespace X_RayPalette
                         ImGui.Text("Phone: ");
                         ImGui.SameLine(110);
                         ImGui.PushItemWidth(150);
-                        ImGui.InputText("##pesel##", ref _newPatientPESEL, 11);
+                        ImGui.InputText("##pesel##", ref _newPatientPesel, 11);
                         ImGui.PopItemWidth();
                         ImGui.Text("Phone: ");
                         ImGui.SameLine(110);
                         ImGui.PushItemWidth(50);
-                        if (ImGui.BeginCombo("##phoneArea", _newPatientPhoneAreaCode == null ? "Phone area" : ("+" + _newPatientPhoneAreaCode.AreaCode)))
+                        if (ImGui.BeginCombo("##phoneArea", "+" + _newPatientPhoneAreaCode.AreaCode))
                         {
                             foreach (var areaCode in InputDataHelper.PhoneAreaCodes)
                             {
@@ -187,7 +188,7 @@ namespace X_RayPalette
 
                     if (ImGui.BeginTabItem("Dev")) //obviously will be moved in the future
                     {
-                        _opendev = true;
+                        DevOpen = true;
                         //to do: select or drop image here and convert to long rainbow
                         if (ImGui.Button("Select Image"))
                         { 
@@ -199,23 +200,6 @@ namespace X_RayPalette
                         
                         ImGui.EndTabItem();
                     }
-
-                    if (_windowCopy.Width > 289)
-                    {
-                        ImGui.SameLine(_windowCopy.Width-60);
-                        if (ImGui.Button("logout"))
-                        {
-                            _loggedIn = false;
-                        }
-                    }
-                    else
-                    {
-                        if (ImGui.TabItemButton("logout"))
-                        {
-                            _loggedIn = false;
-                        }
-                    }
-                    
                 }
             }
             else
