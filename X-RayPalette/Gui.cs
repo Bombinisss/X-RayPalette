@@ -89,12 +89,12 @@ namespace X_RayPalette
                             switch (_theme)
                             {
                                 case 0:
-                                    DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, true, 0x00FFFFFF);
+                                    DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, false, 0x00FFFFFF);
                                     _flags &= ~ImGuiWindowFlags.NoBackground;
                                     SetupImGuiStyle0();
                                     break;
                                 case 1:
-                                    DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, true, 0x00000000);
+                                    DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, true,0x00000000);
                                     _flags |= ImGuiWindowFlags.NoBackground;
                                     SetupImGuiStyle1();
                                     break;
