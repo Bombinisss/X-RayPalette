@@ -50,7 +50,7 @@ namespace X_RayPalette
             };
             ImGui.StyleColorsDark();
             Gui.SetupImGuiStyle0();
-            DarkTitleBarClass.UseImmersiveDarkMode(_window.Handle, 0x00FFFFFF);
+            DarkTitleBarClass.UseImmersiveDarkMode(_window.Handle, false, 0x00FFFFFF);
             
             while (_window.Exists)
             {
@@ -95,11 +95,10 @@ namespace X_RayPalette
         private const int DwmwaBorderColor = 34;
         private const int DwmwaCaptionColor = 35;
 
-        public static bool UseImmersiveDarkMode(IntPtr handle, int darkColor)
+        public static bool UseImmersiveDarkMode(IntPtr handle, bool enabled, int darkColor)
         {
             if (!IsWindows10OrGreater(17763)) return false;
             var result=false;
-            bool enabled = false;
             var attribute = DwmwaUseImmersiveDarkModeBefore20H1;
             if (IsWindows10OrGreater(22000))
             {
