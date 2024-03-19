@@ -100,9 +100,12 @@ namespace X_RayPalette
             if (!IsWindows10OrGreater(17763)) return false;
             var result=false;
             var attribute = DwmwaUseImmersiveDarkModeBefore20H1;
-            if (IsWindows10OrGreater(22000))
+            if (IsWindows10OrGreater(19045))
             {
                 attribute = DwmwaUseImmersiveDarkMode;
+            }
+            if (IsWindows10OrGreater(22000))
+            {
                 enabled = true;
             }
 
@@ -116,7 +119,7 @@ namespace X_RayPalette
 
         }
 
-        private static bool IsWindows10OrGreater(int build = -1)
+        public static bool IsWindows10OrGreater(int build = -1)
         {
             return Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= build;
         }

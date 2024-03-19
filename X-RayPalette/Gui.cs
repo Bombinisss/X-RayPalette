@@ -83,21 +83,28 @@ namespace X_RayPalette
                             ImGui.Text("Theme: ");
                             ImGui.SameLine();
 
-                            ImGui.RadioButton("Light", ref _theme, 0);
-                            ImGui.SameLine();
-                            ImGui.RadioButton("Dark", ref _theme, 1);
-                            switch (_theme)
+                            if (ImGui.RadioButton("Light", ref _theme, 0))
                             {
-                                case 0:
-                                    DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, false, 0x00FFFFFF);
-                                    _flags &= ~ImGuiWindowFlags.NoBackground;
-                                    SetupImGuiStyle0();
-                                    break;
-                                case 1:
-                                    DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, true,0x00000000);
-                                    _flags |= ImGuiWindowFlags.NoBackground;
-                                    SetupImGuiStyle1();
-                                    break;
+                                DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, false, 0x00FFFFFF);
+                                _flags &= ~ImGuiWindowFlags.NoBackground;
+                                if (!DarkTitleBarClass.IsWindows10OrGreater(22000))
+                                {
+                                    _windowCopy.Visible = false;
+                                    _windowCopy.Visible = true;
+                                }
+                                SetupImGuiStyle0();
+                            }
+                            ImGui.SameLine();
+                            if (ImGui.RadioButton("Dark", ref _theme, 1))
+                            {
+                                DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, true,0x00000000);
+                                _flags |= ImGuiWindowFlags.NoBackground;
+                                if (!DarkTitleBarClass.IsWindows10OrGreater(22000))
+                                {
+                                    _windowCopy.Visible = false;
+                                    _windowCopy.Visible = true;
+                                }
+                                SetupImGuiStyle1();
                             }
 
                             ImGui.EndMenu();
