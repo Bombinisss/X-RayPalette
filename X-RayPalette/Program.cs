@@ -48,6 +48,7 @@ namespace X_RayPalette
                     Console.WriteLine(dragDropEvent.File); //printing path to dropped file
                     guiObject.ImagePathExist = true;
                     guiObject.Path = dragDropEvent.File;
+                    guiObject.ImageHandler = ImageIntPtr.CreateImgPtr(guiObject.Path);
                 }
 
             };
@@ -217,13 +218,30 @@ namespace X_RayPalette
     {
         public static float width;
         public static float height;
+        public static Texture dimg;
+        static IntPtr ImgPtr;
+
         public static IntPtr CreateImgPtr(string path)
         {
+            if (dimg != null)
+            {
+                Program._renderer.RemoveImGuiBinding(dimg);
+                dimg.Dispose();
+                dimg = null;
+                ImgPtr = IntPtr.Zero;
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                
+            }
             var img = new ImageSharpTexture(path);
-            var dimg = img.CreateDeviceTexture(Program._gd, Program._gd.ResourceFactory);
+            dimg = img.CreateDeviceTexture(Program._gd, Program._gd.ResourceFactory);
+            img = null;
             width = dimg.Width;
             height = dimg.Height;
-            var ImgPtr = Program._renderer.GetOrCreateImGuiBinding(Program._gd.ResourceFactory, dimg); //saves file - returns the intPtr need for Imgui.Image()
+            ImgPtr = Program._renderer.GetOrCreateImGuiBinding(Program._gd.ResourceFactory, dimg); //saves file - returns the intPtr need for Imgui.Image()
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            dimg.Dispose();
             return ImgPtr;
         }
     }
@@ -233,8 +251,8 @@ namespace X_RayPalette
         {
             var filter = new NfdFilter
             {
-                Description = "png (*.png)",
-                Specification = "png"
+                Description = "Images",
+                Specification = "png,jpg,bmp"
             };
             yield return filter;
         }

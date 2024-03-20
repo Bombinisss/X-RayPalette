@@ -17,6 +17,7 @@ namespace X_RayPalette
         public bool DevOpen;
         public string Path;
         public bool ImagePathExist;
+        public IntPtr ImageHandler;
 
         private int _theme;
         private bool _isRunning;
@@ -233,7 +234,7 @@ namespace X_RayPalette
                     }
                     
                     if (ImGui.BeginTabItem("Dev")) //obviously will be moved in the future
-                    {
+                    {              
                         DevOpen = true;
                         //to do: select or drop image here and convert to long rainbow
                         if (ImGui.Button("Select Image"))
@@ -244,11 +245,14 @@ namespace X_RayPalette
                             {
                                 Path = path.Path;
                             }
+                            
                             ImagePathExist = true;
+                            ImageHandler = ImageIntPtr.CreateImgPtr(Path);
+
                         }
                         if (ImagePathExist && Path != null)
                         {
-                            ImGui.Image(ImageIntPtr.CreateImgPtr(Path), new Vector2(ImageIntPtr.width, ImageIntPtr.height));
+                            ImGui.Image(this.ImageHandler, new Vector2(ImageIntPtr.width, ImageIntPtr.height));
                         }
                         ImGui.EndTabItem();
                     }
