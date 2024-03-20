@@ -6,15 +6,16 @@ using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
 using NativeFileDialogExtendedSharp;
+using Veldrid.ImageSharp;
 
 namespace X_RayPalette
 {
     public static class Program
     {
         private static Sdl2Window _window;
-        private static GraphicsDevice _gd;
+        public static GraphicsDevice _gd;
         private static CommandList _cl;
-        private static ImGuiRenderer _renderer;
+        public static ImGuiRenderer _renderer;
         private static readonly Vector3 ClearColor = new(0.0f, 0.0f, 0.0f);
         private static readonly KeyUpdater KeyUpdater = new();
 
@@ -45,6 +46,8 @@ namespace X_RayPalette
                 if (guiObject.DevOpen)
                 {
                     Console.WriteLine(dragDropEvent.File); //printing path to dropped file
+                    guiObject.ImagePathExist = true;
+                    guiObject.Path = dragDropEvent.File;
                 }
 
             };
@@ -210,7 +213,20 @@ namespace X_RayPalette
         }
         
     }
-
+    public class ImageIntPtr
+    {
+        public static float width;
+        public static float height;
+        public static IntPtr CreateImgPtr(string path)
+        {
+            var img = new ImageSharpTexture(path);
+            var dimg = img.CreateDeviceTexture(Program._gd, Program._gd.ResourceFactory);
+            width = dimg.Width;
+            height = dimg.Height;
+            var ImgPtr = Program._renderer.GetOrCreateImGuiBinding(Program._gd.ResourceFactory, dimg); //saves file - returns the intPtr need for Imgui.Image()
+            return ImgPtr;
+        }
+    }
     internal static class Filters
     {
         public static IEnumerable<NfdFilter> CreateNewNfdFilter()

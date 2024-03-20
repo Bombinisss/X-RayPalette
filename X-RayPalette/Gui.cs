@@ -13,7 +13,11 @@ namespace X_RayPalette
                                                ImGuiWindowFlags.NoResize;
 
         private readonly Sdl2Window _windowCopy;
+
         public bool DevOpen;
+        public string Path;
+        public bool ImagePathExist;
+
         private int _theme;
         private bool _isRunning;
         private bool _loggedIn;
@@ -39,6 +43,7 @@ namespace X_RayPalette
         private PhoneAreaCode _newPatientPhoneAreaCode;
         public Gui(Sdl2Window windowCopy)
         {
+            ImagePathExist = false;
             DevOpen = false;
             _theme = 0;
             _windowCopy = windowCopy;
@@ -226,19 +231,25 @@ namespace X_RayPalette
                         ImGui.Button("Add Patient"); // TODO: add patient to database
                         ImGui.EndTabItem();
                     }
-
+                    
                     if (ImGui.BeginTabItem("Dev")) //obviously will be moved in the future
                     {
                         DevOpen = true;
                         //to do: select or drop image here and convert to long rainbow
                         if (ImGui.Button("Select Image"))
-                        { 
-                            
+                        {
                             NfdDialogResult path = Nfd.FileOpen(Filters.CreateNewNfdFilter(), "C:\\"); //path - selected image path
                             Console.WriteLine(path.Path); //check image path
-
+                            if (path.Path != null)
+                            {
+                                Path = path.Path;
+                            }
+                            ImagePathExist = true;
                         }
-                        
+                        if (ImagePathExist && Path != null)
+                        {
+                            ImGui.Image(ImageIntPtr.CreateImgPtr(Path), new Vector2(ImageIntPtr.width, ImageIntPtr.height));
+                        }
                         ImGui.EndTabItem();
                     }
                 }
