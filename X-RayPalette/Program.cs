@@ -79,6 +79,12 @@ namespace X_RayPalette
                 _cl.End();
                 _gd.SubmitCommands(_cl);
                 _gd.SwapBuffers(_gd.MainSwapchain);
+                if (guiObject._loggedout)
+                {
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    guiObject = new Gui(_window);
+                }
             }
 
             // Clean up Veldrid resources
@@ -102,7 +108,7 @@ namespace X_RayPalette
         public static bool UseImmersiveDarkMode(IntPtr handle, bool enabled, int darkColor)
         {
             if (!IsWindows10OrGreater(17763)) return false;
-            var result=false;
+            var result = false;
             var attribute = DwmwaUseImmersiveDarkModeBefore20H1;
             if (IsWindows10OrGreater(19045))
             {
