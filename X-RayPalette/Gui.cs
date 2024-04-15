@@ -3,6 +3,9 @@ using ImGuiNET;
 using Veldrid.Sdl2;
 using X_RayPalette.Helpers;
 using NativeFileDialogExtendedSharp;
+using System;
+using MySql.Data.MySqlClient;
+using System.Data;
 
 namespace X_RayPalette
 {
@@ -13,6 +16,8 @@ namespace X_RayPalette
                                                ImGuiWindowFlags.NoResize;
 
         private readonly Sdl2Window _windowCopy;
+
+        public Connector _connector = new Connector(); // creating connection to database;
 
         public bool DevOpen;
         public string Path;
@@ -567,23 +572,33 @@ namespace X_RayPalette
                 {
                     if (ImGui.BeginTabItem("Login"))
                     {
+                        string pass;
                         ImGui.Text("Username: ");
                         ImGui.SameLine(0);
                         ImGui.InputText("##username##", ref _username, 128);
                         ImGui.Text("Password: ");
                         ImGui.SameLine(0);
                         ImGui.InputText("##passwd##", ref _password, 128, ImGuiInputTextFlags.Password);
-                        if (ImGui.Button("Login"))
+                        if (ImGui.Button("Login")) // Admin login: Admin password: Admin12
                         {
-                            if (_username == "admin" && _password == "admin")
+                            _connector.cmd.CommandText = "SELECT password FROM login_info WHERE login LIKE '" + _username + "' LIMIT 1";
+                            pass = (string)_connector.cmd.ExecuteScalar();
+                            if (pass != null && BCrypt.Net.BCrypt.EnhancedVerify(_password, pass))
                             {
-                                _AdminLoggedIn = true;
+                                if (_username == "Admin")
+                                {
+                                    _AdminLoggedIn = true;
+                                }
+                                else
+                                {
+                                    _loggedIn = true;
+                                }
                             }
-                            else
+                            else // to do: inform user about invalid inputs
                             {
-                                _loggedIn = true;
+                                Console.WriteLine("Invalid username or password."); 
                             }
-                            //to do: check login
+                            
                             _flags |= ImGuiWindowFlags.MenuBar;
                             _windowCopy.Height = 540;
                             _windowCopy.Width = 960;                           

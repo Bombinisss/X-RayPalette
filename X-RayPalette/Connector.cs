@@ -7,17 +7,20 @@ using MySql.Data.MySqlClient;
 
 namespace X_RayPalette
 {
-    public class Connector
+    public class Connector 
     {
+        public MySqlCommand cmd;
         public Connector() 
         {
-            string DataBase = "server=localhost;user=root;database=inz_opr_med_app;port=3306;password=Admin12;";
+            string DataBase = "server=81.171.31.232;user=RTG_ordynator;database=pracowaniartg;port=3306;password=RTG_ordynator1;";
             MySqlConnection conn = new MySqlConnection(DataBase);
             try
             {
                 Console.WriteLine("Connecting to MySQL...");
                 conn.Open();
                 Console.WriteLine("Connected to MySQL.");
+                cmd = new MySqlCommand();
+                cmd.Connection = conn;
             }
             catch (Exception er)
             {
