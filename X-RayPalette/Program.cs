@@ -6,18 +6,18 @@ using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
 using NativeFileDialogExtendedSharp;
+using Veldrid.ImageSharp;
 
 namespace X_RayPalette
 {
-    public class Program
+    public static class Program
     {
         private static Sdl2Window _window;
-        private static GraphicsDevice _gd;
+        public static GraphicsDevice _gd;
         private static CommandList _cl;
-        private static ImGuiRenderer _renderer;
-        private static readonly Vector3 _clearColor = new(0.0f, 0.0f, 0.0f);
-        private static KeyUpdater _keyUpdater = new();
-        private static Connector _connector = new Connector();
+        public static ImGuiRenderer _renderer;
+        private static readonly Vector3 ClearColor = new(0.0f, 0.0f, 0.0f);
+        private static readonly KeyUpdater KeyUpdater = new();
 
         private static void Main(string[] args)
         {
@@ -37,33 +37,34 @@ namespace X_RayPalette
                 _window.Height);
 
             var stopwatch = Stopwatch.StartNew();
-            var deltaTime = 0f;
 
             // Main application loop
 
             var guiObject = new Gui(_window);
-            _window.DragDrop += (DragDropEvent) =>
+            _window.DragDrop += (dragDropEvent) =>
             {
-                if (guiObject._opendev)
+                if (guiObject.DevOpen)
                 {
-                    Console.WriteLine(DragDropEvent.File); //printing path to dropped file
+                    Console.WriteLine(dragDropEvent.File); //printing path to dropped file
+                    guiObject.ImagePathExist = true;
+                    guiObject.Path = dragDropEvent.File;
+                    guiObject.ImageHandler = ImageIntPtr.CreateImgPtr(guiObject.Path);
                 }
 
             };
             ImGui.StyleColorsDark();
-            guiObject.SetupImGuiStyle();
-
-            DarkTitleBarClass.UseImmersiveDarkMode(_window.Handle, true);
-
+            Gui.SetupImGuiStyle0();
+            DarkTitleBarClass.UseImmersiveDarkMode(_window.Handle, false, 0x00FFFFFF);
+            
             while (_window.Exists)
             {
-                deltaTime = stopwatch.ElapsedTicks / (float)Stopwatch.Frequency;
+                var deltaTime = stopwatch.ElapsedTicks / (float)Stopwatch.Frequency;
                 stopwatch.Restart();
                 var snapshot = _window.PumpEvents();
                 if (!_window.Exists) break;
                 _renderer.Update(deltaTime,
                     snapshot); // Feed the input events to our ImGui controller, which passes them through to ImGui.
-                _keyUpdater.UpdateImGuiInput(snapshot);
+                KeyUpdater.UpdateImGuiInput(snapshot);
 
                 // ImGui window position and size
                 var viewport = ImGui.GetMainViewport();
@@ -73,11 +74,17 @@ namespace X_RayPalette
 
                 _cl.Begin();
                 _cl.SetFramebuffer(_gd.MainSwapchain.Framebuffer);
-                _cl.ClearColorTarget(0, new RgbaFloat(_clearColor.X, _clearColor.Y, _clearColor.Z, 1f));
+                _cl.ClearColorTarget(0, new RgbaFloat(ClearColor.X, ClearColor.Y, ClearColor.Z, 1f));
                 _renderer.Render(_gd, _cl);
                 _cl.End();
                 _gd.SubmitCommands(_cl);
                 _gd.SwapBuffers(_gd.MainSwapchain);
+                if (guiObject._loggedout)
+                {
+                    GC.Collect();
+                    GC.WaitForPendingFinalizers();
+                    guiObject = new Gui(_window);
+                }
             }
 
             // Clean up Veldrid resources
@@ -86,47 +93,43 @@ namespace X_RayPalette
             _cl.Dispose();
             _gd.Dispose();
         }
-
-        private static void _window_DragDrop(DragDropEvent obj)
-        {
-            throw new NotImplementedException();
-        }
     }
 
-    class DarkTitleBarClass
+    internal static class DarkTitleBarClass
     {
         [DllImport("dwmapi.dll")]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
 
-        private const int DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1 = 19;
-        private const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20;
-        private const int DWMWA_BORDER_COLOR = 34;
-        private const int DWMWA_CAPTION_COLOR = 35;
+        private const int DwmwaUseImmersiveDarkModeBefore20H1 = 19;
+        private const int DwmwaUseImmersiveDarkMode = 20;
+        private const int DwmwaBorderColor = 34;
+        private const int DwmwaCaptionColor = 35;
 
-        public static bool UseImmersiveDarkMode(IntPtr handle, bool enabled)
+        public static bool UseImmersiveDarkMode(IntPtr handle, bool enabled, int darkColor)
         {
-            if (IsWindows10OrGreater(17763))
+            if (!IsWindows10OrGreater(17763)) return false;
+            var result = false;
+            var attribute = DwmwaUseImmersiveDarkModeBefore20H1;
+            if (IsWindows10OrGreater(19045))
             {
-                var attribute = DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1;
-                if (IsWindows10OrGreater(18985))
-                {
-                    attribute = DWMWA_USE_IMMERSIVE_DARK_MODE;
-                }
-
-                int useImmersiveDarkMode = enabled ? 1 : 0;
-                var outval = DwmSetWindowAttribute(handle, attribute, ref useImmersiveDarkMode, sizeof(int)) == 0;
-
-                var darkColor = 0x00000000;
-                outval = DwmSetWindowAttribute(handle, DWMWA_BORDER_COLOR | DWMWA_CAPTION_COLOR, ref darkColor,
-                    sizeof(int)) == 0;
-
-                return outval;
+                attribute = DwmwaUseImmersiveDarkMode;
+            }
+            if (IsWindows10OrGreater(22000))
+            {
+                enabled = true;
             }
 
-            return false;
+            var useImmersiveDarkMode = enabled ? 1 : 0;
+            result = DwmSetWindowAttribute(handle, attribute, ref useImmersiveDarkMode, sizeof(int)) == 0;
+            
+            result = DwmSetWindowAttribute(handle, DwmwaBorderColor | DwmwaCaptionColor, ref darkColor,
+                sizeof(int)) == 0;
+
+            return result;
+
         }
 
-        private static bool IsWindows10OrGreater(int build = -1)
+        public static bool IsWindows10OrGreater(int build = -1)
         {
             return Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= build;
         }
@@ -145,12 +148,11 @@ namespace X_RayPalette
             io.AddMouseButtonEvent(4, snapshot.IsMouseDown(MouseButton.Button2));
             io.AddMouseWheelEvent(0f, snapshot.WheelDelta);
 
-            for (int i = 0; i < snapshot.KeyEvents.Count; i++)
+            foreach (var keyEvent in snapshot.KeyEvents)
             {
-                KeyEvent keyEvent = snapshot.KeyEvents[i];
-                if (TryMapKey(keyEvent.Key, out ImGuiKey imguikey))
+                if (TryMapKey(keyEvent.Key, out var imguiKey))
                 {
-                    io.AddKeyEvent(imguikey, keyEvent.Down);
+                    io.AddKeyEvent(imguiKey, keyEvent.Down);
                 }
             }
         }
@@ -218,13 +220,46 @@ namespace X_RayPalette
         }
         
     }
-    class Filters
+    public class ImageIntPtr
+    {
+        public static float width;
+        public static float height;
+        public static Texture dimg;
+        static IntPtr ImgPtr;
+
+        public static IntPtr CreateImgPtr(string path)
+        {
+            if (dimg != null)
+            {
+                Program._renderer.RemoveImGuiBinding(dimg);
+                dimg.Dispose();
+                dimg = null;
+                ImgPtr = IntPtr.Zero;
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                
+            }
+            var img = new ImageSharpTexture(path);
+            dimg = img.CreateDeviceTexture(Program._gd, Program._gd.ResourceFactory);
+            img = null;
+            width = dimg.Width;
+            height = dimg.Height;
+            ImgPtr = Program._renderer.GetOrCreateImGuiBinding(Program._gd.ResourceFactory, dimg); //saves file - returns the intPtr need for Imgui.Image()
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            dimg.Dispose();
+            return ImgPtr;
+        }
+    }
+    internal static class Filters
     {
         public static IEnumerable<NfdFilter> CreateNewNfdFilter()
         {
-            NfdFilter filter = new NfdFilter();
-            filter.Description = "png (*.png)";
-            filter.Specification = "png";
+            var filter = new NfdFilter
+            {
+                Description = "Images",
+                Specification = "png,jpg,bmp"
+            };
             yield return filter;
         }
     }
