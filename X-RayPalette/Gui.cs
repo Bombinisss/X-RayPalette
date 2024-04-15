@@ -545,6 +545,8 @@ namespace X_RayPalette
                             if (path.Path != null)
                             {
                                 Path = path.Path;
+                                Thread thread = new Thread(() => ColorChanger.Worker(Path));
+                                thread.Start();
                             }
                             
                             ImagePathExist = true;
