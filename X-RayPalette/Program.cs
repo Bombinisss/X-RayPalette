@@ -7,6 +7,8 @@ using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
 using NativeFileDialogExtendedSharp;
 using Veldrid.ImageSharp;
+using System.Drawing;
+using System.Drawing.Imaging;
 
 namespace X_RayPalette
 {
@@ -262,5 +264,101 @@ namespace X_RayPalette
             };
             yield return filter;
         }
+    }
+
+    public static class ColorChanger
+    {
+        public static void Worker(string inputPath) {
+            
+            ConvertToLongRainbow(inputPath, "output.png");
+        }
+        
+        static void ConvertToLongRainbow(string inputPath, string outputPath)
+        {
+            using (Bitmap inputBitmap = new Bitmap(inputPath))
+            {
+                Bitmap outputBitmap = new Bitmap(inputBitmap.Width, inputBitmap.Height);
+
+                for (int y = 0; y < inputBitmap.Height; y++)
+                {
+                    for (int x = 0; x < inputBitmap.Width; x++)
+                    {
+                        Color pixelColor = inputBitmap.GetPixel(x, y);
+                        int grayscaleValue = (int)(0.3 * pixelColor.R + 0.59 * pixelColor.G + 0.11 * pixelColor.B);
+                        Color rainbowColor = PM3DColor(grayscaleValue);
+                        outputBitmap.SetPixel(x, y, rainbowColor);
+                    }
+                }
+
+                outputBitmap.Save(outputPath, ImageFormat.Png);
+            }
+        }
+
+        static Color RainbowColor(int value)
+        {
+            int r, g, b;
+            double f = (double)value / 255;
+
+            if (f <= 0.25)
+            {
+                r = 0;
+                g = 0;
+                b = (int)(255 * (0.25 - f) / 0.25);
+            }
+            else if (f <= 0.5)
+            {
+                r = 0;
+                g = (int)(255 * (f - 0.25) / 0.25);
+                b = 255;
+            }
+            else if (f <= 0.75)
+            {
+                r = (int)(255 * (f - 0.5) / 0.25);
+                g = 255;
+                b = (int)(255 * (0.75 - f) / 0.25);
+            }
+            else
+            {
+                r = 255;
+                g = (int)(255 * (1 - f) / 0.25);
+                b = 0;
+            }
+
+            return Color.FromArgb(r, g, b);
+        }
+        
+        static Color PM3DColor(int value)
+        {
+            int r, g, b;
+            double f = (double)value / 255;
+
+            if (f < 0.25)
+            {
+                r = 0;
+                g = 0;
+                b = (int)(255 * f / 0.25);
+            }
+            else if (f < 0.5)
+            {
+                r = 0;
+                g = (int)(255 * (f - 0.25) / 0.25);
+                b = 255;
+            }
+            else if (f < 0.75)
+            {
+                r = (int)(255 * (f - 0.5) / 0.25);
+                g = 255;
+                b = (int)(255 - 255 * (f - 0.5) / 0.25);
+            }
+            else
+            {
+                r = 255;
+                g = (int)(255 - 255 * (f - 0.75) / 0.25);
+                b = 0;
+            }
+
+            return Color.FromArgb(r, g, b);
+        }
+        
     }
 }
