@@ -24,6 +24,9 @@ namespace X_RayPalette
         public string Path;
         public bool ImagePathExist;
         public IntPtr ImageHandler;
+        public static IntPtr ImageHandlerOut;
+        public IntPtr ImageHandlerLoading;
+        public bool ConvertButton;
 
         private int _theme;
         private bool _isRunning;
@@ -52,6 +55,7 @@ namespace X_RayPalette
         public Gui(Sdl2Window windowCopy)
         {
             ImagePathExist = false;
+            ConvertButton = false;
             DevOpen = false;
             _theme = 0;
             _windowCopy = windowCopy;
@@ -242,18 +246,40 @@ namespace X_RayPalette
                             Console.WriteLine(path.Path); //check image path
                             if (path.Path != null)
                             {
+                                ConvertButton = false;
                                 Path = path.Path;
+
+                                ImagePathExist = true;
+                            }
+                            if (ImagePathExist)
+                            {
+                                ImageHandler = ImageIntPtr.CreateImgPtr(Path);
+                            }
+                        }
+                        if (ImGui.Button("ConvertImage"))
+                        {
+                            if (Path != null)
+                            {
+                                ConvertButton = true;
                                 Thread thread = new Thread(() => ColorChanger.Worker(Path));
                                 thread.Start();
+                                ImagePathHelper.ImagesFolderPath();
+                                ImageHandlerLoading = ImageIntPtr.CreateImgPtrLoading(ImagePathHelper.ImagesFolderPath() + "\\loading.jpg");
                             }
-                            
-                            ImagePathExist = true;
-                            ImageHandler = ImageIntPtr.CreateImgPtr(Path);
 
                         }
                         if (ImagePathExist && Path != null)
                         {
                             ImGui.Image(this.ImageHandler, new Vector2(ImageIntPtr.width, ImageIntPtr.height));
+
+                            if (ConvertButton && ColorChanger.WorkerEnd)
+                            {
+                                ImGui.Image(ImageHandlerOut, new Vector2(ImageIntPtr.widthOut, ImageIntPtr.heightOut));
+                            }
+                            else if(ConvertButton)
+                            {
+                                ImGui.Image(this.ImageHandlerLoading, new Vector2(ImageIntPtr.widthLoading, ImageIntPtr.heightLoading));
+                            }
                         }
                         ImGui.EndTabItem();
                     }

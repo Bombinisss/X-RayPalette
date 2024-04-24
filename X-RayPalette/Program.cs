@@ -9,6 +9,7 @@ using NativeFileDialogExtendedSharp;
 using Veldrid.ImageSharp;
 using System.Drawing;
 using System.Drawing.Imaging;
+using X_RayPalette.Helpers;
 
 namespace X_RayPalette
 {
@@ -51,6 +52,7 @@ namespace X_RayPalette
                     guiObject.ImagePathExist = true;
                     guiObject.Path = dragDropEvent.File;
                     guiObject.ImageHandler = ImageIntPtr.CreateImgPtr(guiObject.Path);
+                    guiObject.ConvertButton = false;
                 }
 
             };
@@ -226,8 +228,16 @@ namespace X_RayPalette
     {
         public static float width;
         public static float height;
+        public static float widthOut;
+        public static float heightOut;
+        public static float widthLoading;
+        public static float heightLoading;
         public static Texture dimg;
+        public static Texture dimgOut;
+        public static Texture dimgLoading;
         static IntPtr ImgPtr;
+        static IntPtr ImgPtrOut;
+        static IntPtr ImgPtrLoading;
 
         public static IntPtr CreateImgPtr(string path)
         {
@@ -252,6 +262,50 @@ namespace X_RayPalette
             dimg.Dispose();
             return ImgPtr;
         }
+        public static IntPtr CreateImgPtrOut(string path)
+        {
+            if (dimgOut != null)
+            {
+                Program._renderer.RemoveImGuiBinding(dimgOut);
+                dimgOut.Dispose();
+                dimgOut = null;
+                ImgPtrOut = IntPtr.Zero;
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+            var img = new ImageSharpTexture(path);
+            dimgOut = img.CreateDeviceTexture(Program._gd, Program._gd.ResourceFactory);
+            img = null;
+            widthOut = dimgOut.Width;
+            heightOut = dimgOut.Height;
+            ImgPtrOut = Program._renderer.GetOrCreateImGuiBinding(Program._gd.ResourceFactory, dimgOut); //saves file - returns the intPtr need for Imgui.Image()
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            //dimgOut.Dispose();
+            return ImgPtrOut;
+        }
+        public static IntPtr CreateImgPtrLoading(string path)
+        {
+            if (dimgLoading != null)
+            {
+                Program._renderer.RemoveImGuiBinding(dimgLoading);
+                dimgLoading.Dispose();
+                dimgLoading = null;
+                ImgPtrLoading = IntPtr.Zero;
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+            }
+            var img = new ImageSharpTexture(path);
+            dimgLoading = img.CreateDeviceTexture(Program._gd, Program._gd.ResourceFactory);
+            img = null;
+            widthLoading = dimgLoading.Width;
+            heightLoading = dimgLoading.Height;
+            ImgPtrLoading = Program._renderer.GetOrCreateImGuiBinding(Program._gd.ResourceFactory, dimgLoading); //saves file - returns the intPtr need for Imgui.Image()
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            dimgLoading.Dispose();
+            return ImgPtrLoading;
+        }
     }
     internal static class Filters
     {
@@ -268,9 +322,10 @@ namespace X_RayPalette
 
     public static class ColorChanger
     {
+        public static bool WorkerEnd;
         public static void Worker(string inputPath) {
-            
-            ConvertToLongRainbow(inputPath, "output.png");
+            WorkerEnd = false;
+            ConvertToLongRainbow(inputPath, ImagePathHelper.ImagesFolderPath() + "\\output.png");
         }
         
         static void ConvertToLongRainbow(string inputPath, string outputPath)
@@ -289,8 +344,9 @@ namespace X_RayPalette
                         outputBitmap.SetPixel(x, y, rainbowColor);
                     }
                 }
-
                 outputBitmap.Save(outputPath, ImageFormat.Png);
+                Gui.ImageHandlerOut = ImageIntPtr.CreateImgPtrOut(ImagePathHelper.ImagesFolderPath() + "\\output.png");
+                WorkerEnd = true;
             }
         }
 
