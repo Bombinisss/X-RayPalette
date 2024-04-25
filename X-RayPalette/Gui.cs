@@ -18,8 +18,6 @@ namespace X_RayPalette
 
         private readonly Sdl2Window _windowCopy;
 
-        public Connector Connector = new Connector(); // creating connection to database;
-
         public bool DevOpen;
         public string Path;
         public bool ImagePathExist;
@@ -73,19 +71,20 @@ namespace X_RayPalette
             _password = "";
 
             //config for patients view
-             _addPatientView = new PatientAdd();
-             _addPatientView.OnBack += (sender, args) => { _adminAddNewPatient = false;  };
+            _addPatientView = new PatientAdd();
+            _addPatientView.OnBack += (sender, args) => { _adminAddNewPatient = false; };
 
-             _patientAssigment = new PatientAssignment();
-             _patientAssigment.OnBack += (sender, args) => { _adminAddExistingPatient = false; };
+            _patientAssigment = new PatientAssignment();
+            _patientAssigment.OnBack += (sender, args) => { _adminAddExistingPatient = false; };
 
-             _patientAssigmentAlt = new PatientAssigmentWrapper();
-             _patientAssigmentAlt.OnBack += (sender, args) => {
+            _patientAssigmentAlt = new PatientAssigmentWrapper();
+            _patientAssigmentAlt.OnBack += (sender, args) =>
+            {
                 _adminAddNewPatient = false;
                 _adminAddExistingPatient = false;
                 _patientAssigment.Back();
                 _addPatientView.Back();
-             };
+            };
 
             //config for doctor
 
@@ -100,8 +99,9 @@ namespace X_RayPalette
             _infoChangePatient.OnBack += (sender, args) => { _adminChangePatientInfo = false; };
 
             _infoChangeWrapper = new WrapperInfoChange();
-            _infoChangeWrapper.OnBack += (sender, args) => { 
-                _adminChangeDoctorInfo = false; 
+            _infoChangeWrapper.OnBack += (sender, args) =>
+            {
+                _adminChangeDoctorInfo = false;
                 _adminChangePatientInfo = false;
                 _infoChangeDoctor.Back();
                 _infoChangePatient.Back();
@@ -117,63 +117,63 @@ namespace X_RayPalette
 
             if (ImGui.BeginMenuBar())
             {
-                if(_loggedIn || _adminLoggedIn)
-                if (ImGui.BeginMenu("File"))
-                {
-                    if (ImGui.MenuItem("Close")) { _isRunning= false; }
-
-                    if (ImGui.BeginMenu("Settings"))
+                if (_loggedIn || _adminLoggedIn)
+                    if (ImGui.BeginMenu("File"))
                     {
-                        ImGui.Text("Theme:      ");
-                        ImGui.SameLine();
+                        if (ImGui.MenuItem("Close")) { _isRunning = false; }
 
-                        if (ImGui.RadioButton("Light", ref _theme, 0))
+                        if (ImGui.BeginMenu("Settings"))
                         {
-                            DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, false, 0x00FFFFFF);
-                            _flags &= ~ImGuiWindowFlags.NoBackground;
-                            if (!DarkTitleBarClass.IsWindows10OrGreater(22000))
+                            ImGui.Text("Theme:      ");
+                            ImGui.SameLine();
+
+                            if (ImGui.RadioButton("Light", ref _theme, 0))
                             {
-                                _windowCopy.Visible = false;
-                                _windowCopy.Visible = true;
+                                DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, false, 0x00FFFFFF);
+                                _flags &= ~ImGuiWindowFlags.NoBackground;
+                                if (!DarkTitleBarClass.IsWindows10OrGreater(22000))
+                                {
+                                    _windowCopy.Visible = false;
+                                    _windowCopy.Visible = true;
+                                }
+                                SetupImGuiStyle0();
                             }
-                            SetupImGuiStyle0();
+                            ImGui.SameLine();
+                            if (ImGui.RadioButton("Dark", ref _theme, 1))
+                            {
+                                DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, true, 0x00000000);
+                                _flags |= ImGuiWindowFlags.NoBackground;
+                                if (!DarkTitleBarClass.IsWindows10OrGreater(22000))
+                                {
+                                    _windowCopy.Visible = false;
+                                    _windowCopy.Visible = true;
+                                }
+                                SetupImGuiStyle1();
+                            }
+
+                            ImGui.Text("Color Mode: ");
+                            ImGui.SameLine();
+                            ImGui.RadioButton("PM3D", ref _colorMode, 0);
+                            ImGui.SameLine();
+                            ImGui.RadioButton("Long Rainbow", ref _colorMode, 1);
+
+                            ImGui.EndMenu();
                         }
-                        ImGui.SameLine();
-                        if (ImGui.RadioButton("Dark", ref _theme, 1))
+
+                        if (ImGui.MenuItem("Logout"))
                         {
-                            DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, true,0x00000000);
-                            _flags |= ImGuiWindowFlags.NoBackground;
-                            if (!DarkTitleBarClass.IsWindows10OrGreater(22000))
-                            {
-                                _windowCopy.Visible = false;
-                                _windowCopy.Visible = true;
-                            }
-                            SetupImGuiStyle1();
+                            _flags &= ~ImGuiWindowFlags.MenuBar;
+                            _windowCopy.Height = 150;
+                            _windowCopy.Width = 400;
+                            LoggedOut = true;
+                            return;
                         }
-                        
-                        ImGui.Text("Color Mode: ");
-                        ImGui.SameLine();
-                        ImGui.RadioButton("PM3D", ref _colorMode, 0);
-                        ImGui.SameLine();
-                        ImGui.RadioButton("Long Rainbow", ref _colorMode, 1);
-                        
+
                         ImGui.EndMenu();
                     }
-
-                    if (ImGui.MenuItem("Logout"))
-                    {
-                        _flags &= ~ImGuiWindowFlags.MenuBar;
-                        _windowCopy.Height = 150;
-                        _windowCopy.Width = 400;
-                        LoggedOut = true;
-                        return;
-                    }
-
-                    ImGui.EndMenu();
-                }
-            ImGui.EndMenuBar();
+                ImGui.EndMenuBar();
             }
-            
+
             if (_loggedIn || _adminLoggedIn)
             {
                 if (ImGui.BeginTabBar("TabBar", ImGuiTabBarFlags.FittingPolicyResizeDown))
@@ -187,21 +187,21 @@ namespace X_RayPalette
 
                             ImGui.EndTabItem();
                         }
-                    }                   
+                    }
                     if (ImGui.BeginTabItem("Add Patient"))
                     {
                         if (_adminLoggedIn && !_adminAddExistingPatient && !_adminAddNewPatient)
-                        {                           
-                            RenderHelper.TextCentered("Choose option", "Add new Patient", "Change Patient Assigment", "OR",ref _adminAddNewPatient,ref _adminAddExistingPatient);                           
+                        {
+                            RenderHelper.TextCentered("Choose option", "Add new Patient", "Change Patient Assigment", "OR", ref _adminAddNewPatient, ref _adminAddExistingPatient);
                         }
                         if (_adminAddExistingPatient || _adminAddNewPatient)
                         {
-                            _patientAssigmentAlt.Render(_adminLoggedIn);             
+                            _patientAssigmentAlt.Render(_adminLoggedIn);
                         }
                         if (_adminAddNewPatient || _loggedIn)
                         {
-                            _addPatientView.Render(_adminLoggedIn);                                           
-                                                  
+                            _addPatientView.Render(_adminLoggedIn);
+
                         }
                         if (_adminAddExistingPatient)
                         {
@@ -210,14 +210,14 @@ namespace X_RayPalette
                         ImGui.EndTabItem();
                     }//END add patient tab
                     if (_adminLoggedIn)
-                    {        
-                        
+                    {
+
                         if (ImGui.BeginTabItem("Register Doctor"))
                         {
                             _doctorRegister.Render(_adminLoggedIn);
                             ImGui.EndTabItem();
                         }
-                        
+
                     }
                     if (_adminLoggedIn)
                     {
@@ -230,7 +230,7 @@ namespace X_RayPalette
                             }
                             if (_adminChangePatientInfo || _adminChangeDoctorInfo)
                             {
-                               _infoChangeWrapper.Render(_adminLoggedIn);
+                                _infoChangeWrapper.Render(_adminLoggedIn);
                             }
                             if (_adminChangeDoctorInfo)
                             {
@@ -245,7 +245,7 @@ namespace X_RayPalette
                         }
                     }
                     if (ImGui.BeginTabItem("Dev")) //obviously will be moved in the future
-                    {              
+                    {
                         DevOpen = true;
                         //to do: select or drop image here and convert to long rainbow
                         if (ImGui.Button("Select Image"))
@@ -269,7 +269,7 @@ namespace X_RayPalette
                             if (Path != null)
                             {
                                 ConvertButton = true;
-                                Thread thread = new Thread(() => ColorChanger.Worker(Path,_colorMode));
+                                Thread thread = new Thread(() => ColorChanger.Worker(Path, _colorMode));
                                 thread.Start();
                                 ImagePathHelper.ImagesFolderPath();
                                 _imageHandlerLoading = ImageIntPtr.CreateImgPtrLoading(ImagePathHelper.ImagesFolderPath() + "\\loading.jpg");
@@ -284,7 +284,7 @@ namespace X_RayPalette
                             {
                                 ImGui.Image(ImageHandlerOut, new Vector2(ImageIntPtr.WidthOut, ImageIntPtr.HeightOut));
                             }
-                            else if(ConvertButton)
+                            else if (ConvertButton)
                             {
                                 ImGui.Image(this._imageHandlerLoading, new Vector2(ImageIntPtr.WidthLoading, ImageIntPtr.HeightLoading));
                             }
@@ -304,28 +304,25 @@ namespace X_RayPalette
                 ImGui.InputText("##passwd##", ref _password, 128, ImGuiInputTextFlags.Password);
                 if (ImGui.Button("Login")) // Admin login: Admin password: Admin12
                 {
-                    Connector.Cmd.CommandText =
-                        "SELECT password FROM login_info WHERE login LIKE '" + _username + "' LIMIT 1";
-                    pass = (string)Connector.Cmd.ExecuteScalar();
-                    if (pass != null && BCrypt.Net.BCrypt.EnhancedVerify(_password, pass))
-                    {
-                        if (_username == "Admin")
-                        {
-                            _adminLoggedIn = true;
-                        }
-                        else
-                        {
-                            _loggedIn = true;
-                        }
 
-                        _flags |= ImGuiWindowFlags.MenuBar;
-                        _windowCopy.Height = 540;
-                        _windowCopy.Width = 960;
-                    }
-                    else // to do: inform user about invalid inputs
+                    _username = Program.dbService.AuthUser(_username, _password);
+
+                    if (_username == "Admin")
                     {
-                        Console.WriteLine("Invalid username or password.");
+                        _adminLoggedIn = true;
                     }
+                    else
+                    {
+                        _loggedIn = true;
+                    }
+
+                    _flags |= ImGuiWindowFlags.MenuBar;
+                    _windowCopy.Height = 540;
+                    _windowCopy.Width = 960;
+                }
+                else // to do: inform user about invalid inputs
+                {
+                    Console.WriteLine("Invalid username or password.");
                 }
             }
         }

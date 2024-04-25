@@ -10,12 +10,15 @@ using Veldrid.ImageSharp;
 using System.Drawing;
 using System.Drawing.Imaging;
 using X_RayPalette.Helpers;
+using X_RayPalette.Services;
 
 namespace X_RayPalette
 {
     public static class Program
     {
         private static Sdl2Window _window;
+        // TO DO: set config in separate file
+        public static readonly DatabaseService dbService = new DatabaseService("81.171.31.232", "pracowaniartg", "RTG_ordynator", "RTG_ordynator1", 3306, true); // creating connection to database;
         public static GraphicsDevice Gd;
         private static CommandList _cl;
         public static ImGuiRenderer Renderer;
@@ -59,7 +62,7 @@ namespace X_RayPalette
             ImGui.StyleColorsDark();
             Gui.SetupImGuiStyle0();
             DarkTitleBarClass.UseImmersiveDarkMode(_window.Handle, false, 0x00FFFFFF);
-            
+
             while (_window.Exists)
             {
                 var deltaTime = stopwatch.ElapsedTicks / (float)Stopwatch.Frequency;
@@ -125,7 +128,7 @@ namespace X_RayPalette
 
             var useImmersiveDarkMode = enabled ? 1 : 0;
             result = DwmSetWindowAttribute(handle, attribute, ref useImmersiveDarkMode, sizeof(int)) == 0;
-            
+
             result = DwmSetWindowAttribute(handle, DwmwaBorderColor | DwmwaCaptionColor, ref darkColor,
                 sizeof(int)) == 0;
 
@@ -222,7 +225,7 @@ namespace X_RayPalette
 
             return result != ImGuiKey.None;
         }
-        
+
     }
     public class ImageIntPtr
     {
@@ -249,7 +252,7 @@ namespace X_RayPalette
                 _imgPtr = IntPtr.Zero;
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
-                
+
             }
             var img = new ImageSharpTexture(path);
             Dimg = img.CreateDeviceTexture(Program.Gd, Program.Gd.ResourceFactory);
@@ -323,11 +326,12 @@ namespace X_RayPalette
     public static class ColorChanger
     {
         public static bool WorkerEnd;
-        public static void Worker(string inputPath, int mode) {
+        public static void Worker(string inputPath, int mode)
+        {
             WorkerEnd = false;
             ConvertToLongRainbow(inputPath, ImagePathHelper.ImagesFolderPath() + "\\output.png", mode);
         }
-        
+
         static void ConvertToLongRainbow(string inputPath, string outputPath, int mode)
         {
             using (Bitmap inputBitmap = new Bitmap(inputPath))
@@ -341,8 +345,8 @@ namespace X_RayPalette
                         Color pixelColor = inputBitmap.GetPixel(x, y);
                         int grayscaleValue = (int)(0.3 * pixelColor.R + 0.59 * pixelColor.G + 0.11 * pixelColor.B);
                         Color rainbowColor = Color.FromArgb(0, 0, 0);
-                        if(mode==0){ rainbowColor = Pm3DColor(grayscaleValue);}
-                        else { rainbowColor = LongRainbowColor(grayscaleValue);}
+                        if (mode == 0) { rainbowColor = Pm3DColor(grayscaleValue); }
+                        else { rainbowColor = LongRainbowColor(grayscaleValue); }
                         outputBitmap.SetPixel(x, y, rainbowColor);
                     }
                 }
@@ -384,7 +388,7 @@ namespace X_RayPalette
 
             return Color.FromArgb(r, g, b);
         }
-        
+
         static Color Pm3DColor(int value)
         {
             int r, g, b;
@@ -417,6 +421,6 @@ namespace X_RayPalette
 
             return Color.FromArgb(r, g, b);
         }
-        
+
     }
 }
