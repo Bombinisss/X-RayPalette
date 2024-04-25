@@ -1,4 +1,5 @@
 ﻿using ImGuiNET;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,7 +19,7 @@ namespace X_RayPalette.Views.DoctorRegister
         private string _newDoctorEmail;
         private string _newDoctorPhone;
         private PhoneAreaCode _newDoctorPhoneAreaCode;
-
+        public Connector _connector = new Connector(); // creating connection to database;
         //auth
         private string _passwordRepeat;
         private string _usernameRegister;
@@ -120,7 +121,39 @@ namespace X_RayPalette.Views.DoctorRegister
             if (ImGui.Button("Register"))
             {
                 Back();
-                //to do: add to database
+                 string _getLogins = "Select login from login_info; ";
+                                MySqlCommand cmd = new MySqlCommand(_getLogins, _connector.Cmd.Connection);
+                                MySqlDataReader reader = cmd.ExecuteReader();
+                                while (reader.Read())
+                                {
+                                    if (reader.GetString(0) == _usernameRegister)
+                                    {
+                                        _usernameRegister = "";
+                                        
+                                    }
+                                }
+                                if (_newDoctorName != "" && _newDoctorSurname != "" && _newDoctorPesel != "" && _newDoctorPhone != "" && _usernameRegister != "")
+                                {
+                                    if (_usernameRegister != "" && _passwordRegister != "" && _passwordRepeat != "" && _passwordRegister == _passwordRepeat)
+                                    {
+
+                                        string _passwdhashed = BCrypt.Net.BCrypt.EnhancedHashPassword(_passwordRepeat);
+                                        //to do: add to database DONE 
+                                        // to do: remained adding frontend validation ( backend validation already exsists) 
+                                        string _addDocQuery = "INSERT INTO `doctors` (first_name, sur_name, sex, PESEL, email, phone) " +
+                                        "VALUES('" + _newDoctorName + "','" + _newDoctorSurname + "','" + _newDoctorSex + "', '" + _newDoctorPesel + "','" + _newDoctorEmail + "','" + _newDoctorPhone + "');";
+                                        cmd = new MySqlCommand(_addDocQuery, _connector.Cmd.Connection);
+                                        reader.Close();
+                                        cmd.ExecuteNonQuery();
+                                        _addDocQuery = "INSERT INTO `login_info` (login, password) " +
+                                       "VALUES('" + _usernameRegister + "','" + _passwdhashed + "');";
+                                        cmd = new MySqlCommand(_addDocQuery, _connector.Cmd.Connection);
+                                        cmd.ExecuteNonQuery();
+                                        
+                                    }
+                                    
+                                }
+                                reader.Close();
             }
         }
     }
