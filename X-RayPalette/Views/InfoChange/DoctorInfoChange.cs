@@ -9,14 +9,14 @@ namespace X_RayPalette.Views.InfoChange
 {
     internal class DoctorInfoChange : View
     {
-        private string _tempdataDoc_CI;
+        private string _tempdataDocCi;
         public DoctorInfoChange()
         {
-            _tempdataDoc_CI = "Choose Doctor";
+            _tempdataDocCi = "Choose Doctor";
         }
         public override void Back()
         {
-            _tempdataDoc_CI = "Choose Doctor";
+            _tempdataDocCi = "Choose Doctor";
             OnBackEvent();
         }
 
@@ -25,23 +25,23 @@ namespace X_RayPalette.Views.InfoChange
             ImGui.Text("Choose:");
             ImGui.SameLine();
             string[] temp2 = { "dr1", "dr2" };
-            if (ImGui.BeginCombo("##DocInfoChange##", _tempdataDoc_CI))
+            if (ImGui.BeginCombo("##DocInfoChange##", _tempdataDocCi))
             {
                 foreach (var doc in temp2)
                 {
                     if (ImGui.Selectable(doc))
                     {
-                        _tempdataDoc_CI = doc;
+                        _tempdataDocCi = doc;
                     }
                 }
                 ImGui.EndCombo();
             }
             ImGui.Separator();
-            ImGui.Text("when DB will work there will be shown chosen doctor's informations with change function");
+            ImGui.Text("when DB will work there will be shown chosen doctor's information with change function");
             ImGui.Separator();
             if (ImGui.Button("Confirm changes"))
             {
-                //TODO: replacing changed values ​​in the database
+                //TODO: replacing changed values in the database
                 Back();
             }
         }

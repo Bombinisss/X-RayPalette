@@ -9,7 +9,7 @@ namespace X_RayPalette.Helpers
 {
     public class RenderHelper
     {
-        public static void TextCentered(string header, string b1, string b2, string or, ref bool b1value, ref bool b2value)
+        public static void TextCentered(string header, string b1, string b2, string or, ref bool b1Value, ref bool b2Value)
         {
             var windowWidth = ImGui.GetWindowSize();
             var headerWidth = ImGui.CalcTextSize(header);
@@ -24,14 +24,14 @@ namespace X_RayPalette.Helpers
 
             if (ImGui.Button(b1))
             {
-                b1value = true;
+                b1Value = true;
             }
             ImGui.SameLine();
             ImGui.Text(or);
             ImGui.SameLine();
             if (ImGui.Button(b2))
             {
-                b2value = true;
+                b2Value = true;
             }
         }
     }

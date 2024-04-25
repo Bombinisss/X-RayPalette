@@ -16,9 +16,9 @@ namespace X_RayPalette
     public static class Program
     {
         private static Sdl2Window _window;
-        public static GraphicsDevice _gd;
+        public static GraphicsDevice Gd;
         private static CommandList _cl;
-        public static ImGuiRenderer _renderer;
+        public static ImGuiRenderer Renderer;
         private static readonly Vector3 ClearColor = new(0.0f, 0.0f, 0.0f);
         private static readonly KeyUpdater KeyUpdater = new();
 
@@ -29,14 +29,14 @@ namespace X_RayPalette
                 new WindowCreateInfo(50, 50, 400, 150, WindowState.Normal, "Med App"),
                 new GraphicsDeviceOptions(true, null, true, ResourceBindingModel.Improved, true, true),
                 out _window,
-                out _gd);
+                out Gd);
             _window.Resized += () =>
             {
-                _gd.MainSwapchain.Resize((uint)_window.Width, (uint)_window.Height);
-                _renderer.WindowResized(_window.Width, _window.Height);
+                Gd.MainSwapchain.Resize((uint)_window.Width, (uint)_window.Height);
+                Renderer.WindowResized(_window.Width, _window.Height);
             };
-            _cl = _gd.ResourceFactory.CreateCommandList();
-            _renderer = new ImGuiRenderer(_gd, _gd.MainSwapchain.Framebuffer.OutputDescription, _window.Width,
+            _cl = Gd.ResourceFactory.CreateCommandList();
+            Renderer = new ImGuiRenderer(Gd, Gd.MainSwapchain.Framebuffer.OutputDescription, _window.Width,
                 _window.Height);
 
             var stopwatch = Stopwatch.StartNew();
@@ -66,7 +66,7 @@ namespace X_RayPalette
                 stopwatch.Restart();
                 var snapshot = _window.PumpEvents();
                 if (!_window.Exists) break;
-                _renderer.Update(deltaTime,
+                Renderer.Update(deltaTime,
                     snapshot); // Feed the input events to our ImGui controller, which passes them through to ImGui.
                 KeyUpdater.UpdateImGuiInput(snapshot);
 
@@ -77,13 +77,13 @@ namespace X_RayPalette
                 guiObject.SubmitUi();
 
                 _cl.Begin();
-                _cl.SetFramebuffer(_gd.MainSwapchain.Framebuffer);
+                _cl.SetFramebuffer(Gd.MainSwapchain.Framebuffer);
                 _cl.ClearColorTarget(0, new RgbaFloat(ClearColor.X, ClearColor.Y, ClearColor.Z, 1f));
-                _renderer.Render(_gd, _cl);
+                Renderer.Render(Gd, _cl);
                 _cl.End();
-                _gd.SubmitCommands(_cl);
-                _gd.SwapBuffers(_gd.MainSwapchain);
-                if (guiObject._loggedout)
+                Gd.SubmitCommands(_cl);
+                Gd.SwapBuffers(Gd.MainSwapchain);
+                if (guiObject.LoggedOut)
                 {
                     GC.Collect();
                     GC.WaitForPendingFinalizers();
@@ -92,10 +92,10 @@ namespace X_RayPalette
             }
 
             // Clean up Veldrid resources
-            _gd.WaitForIdle();
-            _renderer.Dispose();
+            Gd.WaitForIdle();
+            Renderer.Dispose();
             _cl.Dispose();
-            _gd.Dispose();
+            Gd.Dispose();
         }
     }
 
@@ -226,85 +226,85 @@ namespace X_RayPalette
     }
     public class ImageIntPtr
     {
-        public static float width;
-        public static float height;
-        public static float widthOut;
-        public static float heightOut;
-        public static float widthLoading;
-        public static float heightLoading;
-        public static Texture dimg;
-        public static Texture dimgOut;
-        public static Texture dimgLoading;
-        static IntPtr ImgPtr;
-        static IntPtr ImgPtrOut;
-        static IntPtr ImgPtrLoading;
+        public static float Width;
+        public static float Height;
+        public static float WidthOut;
+        public static float HeightOut;
+        public static float WidthLoading;
+        public static float HeightLoading;
+        public static Texture Dimg;
+        public static Texture DimgOut;
+        public static Texture DimgLoading;
+        static IntPtr _imgPtr;
+        static IntPtr _imgPtrOut;
+        static IntPtr _imgPtrLoading;
 
         public static IntPtr CreateImgPtr(string path)
         {
-            if (dimg != null)
+            if (Dimg != null)
             {
-                Program._renderer.RemoveImGuiBinding(dimg);
-                dimg.Dispose();
-                dimg = null;
-                ImgPtr = IntPtr.Zero;
+                Program.Renderer.RemoveImGuiBinding(Dimg);
+                Dimg.Dispose();
+                Dimg = null;
+                _imgPtr = IntPtr.Zero;
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
                 
             }
             var img = new ImageSharpTexture(path);
-            dimg = img.CreateDeviceTexture(Program._gd, Program._gd.ResourceFactory);
+            Dimg = img.CreateDeviceTexture(Program.Gd, Program.Gd.ResourceFactory);
             img = null;
-            width = dimg.Width;
-            height = dimg.Height;
-            ImgPtr = Program._renderer.GetOrCreateImGuiBinding(Program._gd.ResourceFactory, dimg); //saves file - returns the intPtr need for Imgui.Image()
+            Width = Dimg.Width;
+            Height = Dimg.Height;
+            _imgPtr = Program.Renderer.GetOrCreateImGuiBinding(Program.Gd.ResourceFactory, Dimg); //saves file - returns the intPtr need for Imgui.Image()
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            dimg.Dispose();
-            return ImgPtr;
+            Dimg.Dispose();
+            return _imgPtr;
         }
         public static IntPtr CreateImgPtrOut(string path)
         {
-            if (dimgOut != null)
+            if (DimgOut != null)
             {
-                Program._renderer.RemoveImGuiBinding(dimgOut);
-                dimgOut.Dispose();
-                dimgOut = null;
-                ImgPtrOut = IntPtr.Zero;
+                Program.Renderer.RemoveImGuiBinding(DimgOut);
+                DimgOut.Dispose();
+                DimgOut = null;
+                _imgPtrOut = IntPtr.Zero;
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
             var img = new ImageSharpTexture(path);
-            dimgOut = img.CreateDeviceTexture(Program._gd, Program._gd.ResourceFactory);
+            DimgOut = img.CreateDeviceTexture(Program.Gd, Program.Gd.ResourceFactory);
             img = null;
-            widthOut = dimgOut.Width;
-            heightOut = dimgOut.Height;
-            ImgPtrOut = Program._renderer.GetOrCreateImGuiBinding(Program._gd.ResourceFactory, dimgOut); //saves file - returns the intPtr need for Imgui.Image()
+            WidthOut = DimgOut.Width;
+            HeightOut = DimgOut.Height;
+            _imgPtrOut = Program.Renderer.GetOrCreateImGuiBinding(Program.Gd.ResourceFactory, DimgOut); //saves file - returns the intPtr need for Imgui.Image()
             GC.Collect();
             GC.WaitForPendingFinalizers();
             //dimgOut.Dispose();
-            return ImgPtrOut;
+            return _imgPtrOut;
         }
         public static IntPtr CreateImgPtrLoading(string path)
         {
-            if (dimgLoading != null)
+            if (DimgLoading != null)
             {
-                Program._renderer.RemoveImGuiBinding(dimgLoading);
-                dimgLoading.Dispose();
-                dimgLoading = null;
-                ImgPtrLoading = IntPtr.Zero;
+                Program.Renderer.RemoveImGuiBinding(DimgLoading);
+                DimgLoading.Dispose();
+                DimgLoading = null;
+                _imgPtrLoading = IntPtr.Zero;
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
             }
             var img = new ImageSharpTexture(path);
-            dimgLoading = img.CreateDeviceTexture(Program._gd, Program._gd.ResourceFactory);
+            DimgLoading = img.CreateDeviceTexture(Program.Gd, Program.Gd.ResourceFactory);
             img = null;
-            widthLoading = dimgLoading.Width;
-            heightLoading = dimgLoading.Height;
-            ImgPtrLoading = Program._renderer.GetOrCreateImGuiBinding(Program._gd.ResourceFactory, dimgLoading); //saves file - returns the intPtr need for Imgui.Image()
+            WidthLoading = DimgLoading.Width;
+            HeightLoading = DimgLoading.Height;
+            _imgPtrLoading = Program.Renderer.GetOrCreateImGuiBinding(Program.Gd.ResourceFactory, DimgLoading); //saves file - returns the intPtr need for Imgui.Image()
             GC.Collect();
             GC.WaitForPendingFinalizers();
-            dimgLoading.Dispose();
-            return ImgPtrLoading;
+            DimgLoading.Dispose();
+            return _imgPtrLoading;
         }
     }
     internal static class Filters
@@ -323,12 +323,12 @@ namespace X_RayPalette
     public static class ColorChanger
     {
         public static bool WorkerEnd;
-        public static void Worker(string inputPath) {
+        public static void Worker(string inputPath, int mode) {
             WorkerEnd = false;
-            ConvertToLongRainbow(inputPath, ImagePathHelper.ImagesFolderPath() + "\\output.png");
+            ConvertToLongRainbow(inputPath, ImagePathHelper.ImagesFolderPath() + "\\output.png", mode);
         }
         
-        static void ConvertToLongRainbow(string inputPath, string outputPath)
+        static void ConvertToLongRainbow(string inputPath, string outputPath, int mode)
         {
             using (Bitmap inputBitmap = new Bitmap(inputPath))
             {
@@ -340,7 +340,9 @@ namespace X_RayPalette
                     {
                         Color pixelColor = inputBitmap.GetPixel(x, y);
                         int grayscaleValue = (int)(0.3 * pixelColor.R + 0.59 * pixelColor.G + 0.11 * pixelColor.B);
-                        Color rainbowColor = PM3DColor(grayscaleValue);
+                        Color rainbowColor = Color.FromArgb(0, 0, 0);
+                        if(mode==0){ rainbowColor = Pm3DColor(grayscaleValue);}
+                        else { rainbowColor = LongRainbowColor(grayscaleValue);}
                         outputBitmap.SetPixel(x, y, rainbowColor);
                     }
                 }
@@ -350,7 +352,7 @@ namespace X_RayPalette
             }
         }
 
-        static Color RainbowColor(int value)
+        static Color LongRainbowColor(int value)
         {
             int r, g, b;
             double f = (double)value / 255;
@@ -383,7 +385,7 @@ namespace X_RayPalette
             return Color.FromArgb(r, g, b);
         }
         
-        static Color PM3DColor(int value)
+        static Color Pm3DColor(int value)
         {
             int r, g, b;
             double f = (double)value / 255;

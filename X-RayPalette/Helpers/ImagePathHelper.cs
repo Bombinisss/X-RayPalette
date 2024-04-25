@@ -8,8 +8,8 @@
             string currentDirectory = Directory.GetCurrentDirectory();
             for (int i = 0; i < 3; i++)
             {
-                DirectoryInfo DestinationFolder = Directory.GetParent(currentDirectory);
-                currentDirectory = DestinationFolder.FullName;
+                DirectoryInfo destinationFolder = Directory.GetParent(currentDirectory);
+                currentDirectory = destinationFolder.FullName;
             }
             // Dodaj folder "images" do ścieżki
             string imagesFolder = Path.Combine(currentDirectory, "Images");

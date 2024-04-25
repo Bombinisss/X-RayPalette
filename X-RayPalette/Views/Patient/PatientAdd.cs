@@ -25,14 +25,14 @@ namespace X_RayPalette.Views.Patient
         private string _newPatientPostCode;
         private string _newPatientCountry;
 
-        private string _tempdataDoc_AP;
+        private string _tempdataDocAp;
 
         private PhoneAreaCode _newPatientPhoneAreaCode;
 
         public PatientAdd()
         {
 
-            _tempdataDoc_AP = "Choose Doctor";
+            _tempdataDocAp = "Choose Doctor";
 
             _newPatientName = "";
             _newPatientSurname = "";
@@ -142,14 +142,14 @@ namespace X_RayPalette.Views.Patient
             {
                 ImGui.PushItemWidth(150);
                 string[] temp = { "dr1", "dr2" };
-                if (ImGui.BeginCombo("##Doctorchoose##", _tempdataDoc_AP))
+                if (ImGui.BeginCombo("##Doctorchoose##", _tempdataDocAp))
                 {
 
                     foreach (var doc in temp)
                     {
                         if (ImGui.Selectable(doc))
                         {
-                            _tempdataDoc_AP = doc;
+                            _tempdataDocAp = doc;
                         }
                     }
                     ImGui.EndCombo();
@@ -171,7 +171,7 @@ namespace X_RayPalette.Views.Patient
 
         public override void Back()
         {
-            _tempdataDoc_AP = "Choose Doctor";
+            _tempdataDocAp = "Choose Doctor";
             OnBackEvent();
         }
 

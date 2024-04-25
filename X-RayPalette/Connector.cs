@@ -9,18 +9,18 @@ namespace X_RayPalette
 {
     public class Connector 
     {
-        public MySqlCommand cmd;
+        public MySqlCommand Cmd;
         public Connector() 
         {
-            string DataBase = "server=81.171.31.232;user=RTG_ordynator;database=pracowaniartg;port=3306;password=RTG_ordynator1;";
-            MySqlConnection conn = new MySqlConnection(DataBase);
+            string dataBase = "server=81.171.31.232;user=RTG_ordynator;database=pracowaniartg;port=3306;password=RTG_ordynator1;";
+            MySqlConnection conn = new MySqlConnection(dataBase);
             try
             {
                 Console.WriteLine("Connecting to MySQL...");
                 conn.Open();
                 Console.WriteLine("Connected to MySQL.");
-                cmd = new MySqlCommand();
-                cmd.Connection = conn;
+                Cmd = new MySqlCommand();
+                Cmd.Connection = conn;
             }
             catch (Exception er)
             {
