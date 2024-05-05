@@ -305,26 +305,27 @@ namespace X_RayPalette
                 if (ImGui.Button("Login")) // Admin login: Admin password: Admin12
                 {
 
-                    _username = Program.dbService.AuthUser(_username, _password);
-
-                    if (_username == "Admin")
+                    if (Program.dbService.AuthUser(_username, _password))
                     {
-                        _adminLoggedIn = true;
+                        if (_username == "Admin")
+                        {
+                            _adminLoggedIn = true;
+                        }
+                        else
+                        {
+                            _loggedIn = true;
+                        }
+                        Globals.LoggedDoc = _username;
+                        _flags |= ImGuiWindowFlags.MenuBar;
+                        _windowCopy.Height = 540;
+                        _windowCopy.Width = 960;
                     }
-                    else
+                    else // to do: inform user about invalid inputs
                     {
-                        _loggedIn = true;
+                        Console.WriteLine("Invalid username or password.");
                     }
-
-                    _flags |= ImGuiWindowFlags.MenuBar;
-                    _windowCopy.Height = 540;
-                    _windowCopy.Width = 960;
-                }
-                else // to do: inform user about invalid inputs
-                {
-                    Console.WriteLine("Invalid username or password.");
                 }
             }
-        }
+            }
     }
 }
