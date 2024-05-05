@@ -147,7 +147,7 @@ namespace X_RayPalette.Views.DoctorRegister
                        "VALUES('" + _usernameRegister + "','" + _passwdhashed + "');");
                     }
                 }
-               
+
             }
         }
     }

@@ -149,27 +149,31 @@ namespace X_RayPalette.Services
         }
 
         //methods for more specific use cases
-        public string AuthUser(string login, string password)
+        public Boolean AuthUser(string login, string password)
         {
             if (!_isConnected)
-                return null;
+                return false;
 
-            string sql = "SELECT login, password FROM login_info WHERE login = @p0";
+            string sql = "SELECT password FROM login_info WHERE login LIKE @p0 LIMIT 1";
             using (MySqlDataReader reader = ExecuteFromSql(sql, login))
             {
                 if (reader.Read())
                 {
-                    string hashedPassword = reader.GetString(1);
-                    if (BCrypt.Net.BCrypt.EnhancedVerify(password, hashedPassword))
+                    string hashedPassword = reader.GetString(0);
+                    if (password != null && BCrypt.Net.BCrypt.EnhancedVerify(password, hashedPassword))
                     {
-                        var res= reader.GetString(0);
+                        var res = reader.GetString(0);
                         reader.Close();
-                        return res;
+                        return true;
                     }
                 }
             }
-            return null;
+            return false;
         }
-        
+        public int docNametoId(string loggedWith)
+        {
+            int LoggedDocId = (int)Program.dbService.ExecuteScalar("Select doctors_id from login_info where login ='" + loggedWith + "';");
+            return LoggedDocId;
+        }
     }
 }

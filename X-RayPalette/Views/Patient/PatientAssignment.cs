@@ -1,4 +1,5 @@
 ﻿using ImGuiNET;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -29,10 +30,19 @@ namespace X_RayPalette.Views.Patient
             ImGui.Text("Select Patient");
             ImGui.SameLine(245);
             ImGui.Text("Select new Doctor");
-            string[] temp1 = { "patient1", "patient2" };
+
+
+            List<string> _nameArrayPat = new List<string>();
+            MySqlDataReader reader = Program.dbService.ExecuteFromSql("Select pesel, first_name, sur_name from patient");
+            while (reader.Read())
+            {
+                _nameArrayPat.Add(reader.GetInt32(0) + " " + reader.GetString(1) + " " + reader.GetString(2));
+            }
+            _nameArrayPat.ToArray();
+            reader.Close();
             if (ImGui.BeginCombo("##PatientChange##", _tempdataPatientEp))
             {
-                foreach (var patient in temp1)
+                foreach (var patient in _nameArrayPat)
                 {
                     if (ImGui.Selectable(patient))
                     {
@@ -44,10 +54,17 @@ namespace X_RayPalette.Views.Patient
             ImGui.SameLine();
             ImGui.Text("assigne to");
             ImGui.SameLine();
-            string[] temp2 = { "dr1", "dr2" };
+            List<string> _nameArrayDoc = new List<string>();
+            MySqlDataReader readerDoc = Program.dbService.ExecuteFromSql("Select doctors_id, first_name, sur_name from doctors");
+            while (readerDoc.Read())
+            {
+                _nameArrayDoc.Add(readerDoc.GetInt32(0) + " " + readerDoc.GetString(1) + " " + readerDoc.GetString(2));
+            }
+            _nameArrayDoc.ToArray();
+            readerDoc.Close();
             if (ImGui.BeginCombo("##DocChange##", _tempdataDocEp))
             {
-                foreach (var doc in temp2)
+                foreach (var doc in _nameArrayDoc)
                 {
                     if (ImGui.Selectable(doc))
                     {
@@ -61,6 +78,12 @@ namespace X_RayPalette.Views.Patient
             {
 
                 //TODO: delete previous patient doc assigment and add to new doc
+                string[] InfSelectedDoc = _tempdataDocEp.Split(' ');
+                int SelectedDocId = Convert.ToInt32(InfSelectedDoc[0]);
+
+                string[] InfSelectedPat = _tempdataPatientEp.Split(' ');
+                string SelectedPatPesel = InfSelectedPat[0];
+                var res = Program.dbService.ExecuteNonQuery("Update patient Set doctors_id = '" + SelectedDocId + "' where pesel='" + SelectedPatPesel + "'");
                 Back();
             }
             ImGui.PopItemWidth();

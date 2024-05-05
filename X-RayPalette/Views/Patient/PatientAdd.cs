@@ -140,12 +140,19 @@ namespace X_RayPalette.Views.Patient
 
             if (isAdmin)
             {
-                ImGui.PushItemWidth(150);
-                string[] temp = { "dr1", "dr2" };
+                ImGui.PushItemWidth(350);
+                List<string> _nameArray = new List<string>();
+                MySqlDataReader reader = Program.dbService.ExecuteFromSql("Select doctors_id, first_name, sur_name from doctors");
+                while (reader.Read())
+                {
+                    _nameArray.Add(reader.GetInt32(0) + " " + reader.GetString(1) + " " + reader.GetString(2));
+                }
+                _nameArray.ToArray();
+                reader.Close();
                 if (ImGui.BeginCombo("##Doctorchoose##", _tempdataDocAp))
                 {
 
-                    foreach (var doc in temp)
+                    foreach (var doc in _nameArray)
                     {
                         if (ImGui.Selectable(doc))
                         {
@@ -161,10 +168,51 @@ namespace X_RayPalette.Views.Patient
             {
                 if (isAdmin)
                 {
-                    Back();
-                    // TODO: add patient to database from admin view (to choosen doctor)
+                    System.Console.WriteLine(_tempdataDocAp);
+
+                    MySqlDataReader reader2 = Program.dbService.ExecuteFromSql("Select PESEL from patient;");
+                    while (reader2.Read())
+                    {
+                        if (reader2.GetString(0) == _newPatientPesel)
+                        {
+                            _newPatientPesel = "";
+
+                        }
+                    }
+                    reader2.Close();
+
+                    if (_newPatientName != "" && _newPatientSurname != "" && _newPatientPesel != "" && _newPatientPhone != "")
+                    {
+                        //to do: add to database DONE 
+                        // to do: remained adding frontend validation ( backend validation already exsists) 
+                        string[] InfSelectedDoc = _tempdataDocAp.Split(' ');
+                        int LoggedId = Convert.ToInt32(InfSelectedDoc[0]);
+                        var res = Program.dbService.ExecuteNonQuery("INSERT INTO `patient` (first_name, sur_name, sex, doctors_id, PESEL, email, phone, City, Street, House_number, Flat_number, Post_code, Country) " +
+                        "VALUES('" + _newPatientName + "','" + _newPatientSurname + "','" + _newPatientSex + "', '" + LoggedId + "', '" + _newPatientPesel + "','" + _newPatientEmail + "','" + _newPatientPhone + "','" + _newPatientCity + "','" + _newPatientStreet + "','" + _newPatientHouseNumber + "','" + _newPatientFlatNumber + "','" + _newPatientPostCode + "','" + _newPatientCountry + "');");
+
+                    }
+
                 }
-                // TODO: add patient to database
+                MySqlDataReader reader = Program.dbService.ExecuteFromSql("Select PESEL from patient;");
+                while (reader.Read())
+                {
+                    if (reader.GetString(0) == _newPatientPesel)
+                    {
+                        _newPatientPesel = "";
+
+                    }
+                }
+                reader.Close();
+
+                if (_newPatientName != "" && _newPatientSurname != "" && _newPatientPesel != "" && _newPatientPhone != "")
+                {
+                    //to do: add to database DONE 
+                    // to do: remained adding frontend validation ( backend validation already exsists) 
+                    int LoggedId = Program.dbService.docNametoId(Globals.LoggedDoc);
+                    var res = Program.dbService.ExecuteNonQuery("INSERT INTO `patient` (first_name, sur_name, sex, doctors_id, PESEL, email, phone, City, Street, House_number, Flat_number, Post_code, Country) " +
+                    "VALUES('" + _newPatientName + "','" + _newPatientSurname + "','" + _newPatientSex + "', '" + LoggedId + "', '" + _newPatientPesel + "','" + _newPatientEmail + "','" + _newPatientPhone + "','" + _newPatientCity + "','" + _newPatientStreet + "','" + _newPatientHouseNumber + "','" + _newPatientFlatNumber + "','" + _newPatientPostCode + "','" + _newPatientCountry + "');");
+
+                }
             }
             OnRenderEvent();
         }
