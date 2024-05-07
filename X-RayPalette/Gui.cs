@@ -7,6 +7,7 @@ using X_RayPalette.Helpers;
 using X_RayPalette.Views.InfoChange;
 using X_RayPalette.Views.Patient;
 using X_RayPalette.Views.DoctorRegister;
+using X_RayPalette.Services;
 
 namespace X_RayPalette
 {
@@ -51,8 +52,21 @@ namespace X_RayPalette
         private readonly View _infoChangeDoctor;
         private readonly View _infoChangePatient;
 
+        //color conversion services + image render services
+        private readonly ColorConversionService _colorConvert;
+        private readonly ImageRenderService _imageRender;
+        private readonly ImageRenderService _imageRenderOut;
+        private readonly ImageRenderService _imageRenderLoading;
+
         public Gui(Sdl2Window windowCopy)
         {
+            _colorConvert = new ColorConversionService();
+
+            //render instaces for source, out and loading image
+            _imageRender = new ImageRenderService();
+            _imageRenderOut = new ImageRenderService();
+            _imageRenderLoading = new ImageRenderService();
+
             ImagePathExist = false;
             ConvertButton = false;
             DevOpen = false;
@@ -131,7 +145,7 @@ namespace X_RayPalette
                             {
                                 DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, false, 0x00FFFFFF);
                                 _flags &= ~ImGuiWindowFlags.NoBackground;
-                                if (!DarkTitleBarClass.IsWindows10OrGreater(22000))
+                                if (!EnviromentHelpers.IsSupportedOS(10, 22000))
                                 {
                                     _windowCopy.Visible = false;
                                     _windowCopy.Visible = true;
@@ -143,7 +157,7 @@ namespace X_RayPalette
                             {
                                 DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, true, 0x00000000);
                                 _flags |= ImGuiWindowFlags.NoBackground;
-                                if (!DarkTitleBarClass.IsWindows10OrGreater(22000))
+                                if (!EnviromentHelpers.IsSupportedOS(10, 22000))
                                 {
                                     _windowCopy.Visible = false;
                                     _windowCopy.Visible = true;
@@ -250,7 +264,7 @@ namespace X_RayPalette
                         //to do: select or drop image here and convert to long rainbow
                         if (ImGui.Button("Select Image"))
                         {
-                            NfdDialogResult path = Nfd.FileOpen(Filters.CreateNewNfdFilter(), "C:\\"); //path - selected image path
+                            NfdDialogResult path = Nfd.FileOpen(InputFilterHelper.NfdFilter(), "C:\\"); //path - selected image path
                             Console.WriteLine(path.Path); //check image path
                             if (path.Path != null)
                             {
@@ -261,7 +275,7 @@ namespace X_RayPalette
                             }
                             if (ImagePathExist)
                             {
-                                ImageHandler = ImageIntPtr.CreateImgPtr(Path);
+                                ImageHandler = _imageRender.Create(Path);
                             }
                         }
                         if (ImGui.Button("ConvertImage"))
@@ -269,24 +283,24 @@ namespace X_RayPalette
                             if (Path != null)
                             {
                                 ConvertButton = true;
-                                Thread thread = new Thread(() => ColorChanger.Worker(Path, _colorMode));
+                                Thread thread = new Thread(() => _colorConvert.Start(Path, _colorMode,_imageRenderOut));
                                 thread.Start();
                                 ImagePathHelper.ImagesFolderPath();
-                                _imageHandlerLoading = ImageIntPtr.CreateImgPtrLoading(ImagePathHelper.ImagesFolderPath() + "\\loading.jpg");
+                                _imageHandlerLoading = _imageRenderLoading.Create(ImagePathHelper.ImagesFolderPath() + "\\loading.jpg");
                             }
 
                         }
                         if (ImagePathExist && Path != null)
                         {
-                            ImGui.Image(this.ImageHandler, new Vector2(ImageIntPtr.Width, ImageIntPtr.Height));
+                            ImGui.Image(this.ImageHandler, new Vector2(_imageRender.Width, _imageRender.Height));
 
-                            if (ConvertButton && ColorChanger.WorkerEnd)
+                            if (ConvertButton && _colorConvert.IsProcessing)
                             {
-                                ImGui.Image(ImageHandlerOut, new Vector2(ImageIntPtr.WidthOut, ImageIntPtr.HeightOut));
+                                ImGui.Image(ImageHandlerOut, new Vector2(_imageRenderOut.Width, _imageRenderOut.Height));
                             }
                             else if (ConvertButton)
                             {
-                                ImGui.Image(this._imageHandlerLoading, new Vector2(ImageIntPtr.WidthLoading, ImageIntPtr.HeightLoading));
+                                ImGui.Image(this._imageHandlerLoading, new Vector2(_imageRenderLoading.Width, _imageRenderLoading.Height));
                             }
                         }
                         ImGui.EndTabItem();
@@ -326,6 +340,6 @@ namespace X_RayPalette
                     }
                 }
             }
-            }
+        }
     }
 }
