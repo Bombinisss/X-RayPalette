@@ -24,6 +24,7 @@ namespace X_RayPalette
         public static ImGuiRenderer Renderer;
         private static readonly Vector3 ClearColor = new(0.0f, 0.0f, 0.0f);
         private static readonly KeyUpdater KeyUpdater = new();
+        private static readonly ImageRenderService _devRenderer = new ImageRenderService();
 
         private static void Main(string[] args)
         {
@@ -54,7 +55,7 @@ namespace X_RayPalette
                     Console.WriteLine(dragDropEvent.File); //printing path to dropped file
                     guiObject.ImagePathExist = true;
                     guiObject.Path = dragDropEvent.File;
-                    guiObject.ImageHandler = ImageIntPtr.CreateImgPtr(guiObject.Path);
+                    guiObject.ImageHandler = _devRenderer.Create(guiObject.Path);
                     guiObject.ConvertButton = false;
                 }
 
@@ -107,38 +108,18 @@ namespace X_RayPalette
         [DllImport("dwmapi.dll")]
         private static extern int DwmSetWindowAttribute(IntPtr hwnd, int attr, ref int attrValue, int attrSize);
 
-        private const int DwmwaUseImmersiveDarkModeBefore20H1 = 19;
-        private const int DwmwaUseImmersiveDarkMode = 20;
         private const int DwmwaBorderColor = 34;
         private const int DwmwaCaptionColor = 35;
 
         public static bool UseImmersiveDarkMode(IntPtr handle, bool enabled, int darkColor)
         {
-            if (!IsWindows10OrGreater(17763)) return false;
-            var result = false;
-            var attribute = DwmwaUseImmersiveDarkModeBefore20H1;
-            if (IsWindows10OrGreater(19045))
-            {
-                attribute = DwmwaUseImmersiveDarkMode;
-            }
-            if (IsWindows10OrGreater(22000))
-            {
-                enabled = true;
-            }
-
-            var useImmersiveDarkMode = enabled ? 1 : 0;
-            result = DwmSetWindowAttribute(handle, attribute, ref useImmersiveDarkMode, sizeof(int)) == 0;
-
-            result = DwmSetWindowAttribute(handle, DwmwaBorderColor | DwmwaCaptionColor, ref darkColor,
+            if (!EnviromentHelpers.IsSupportedOS(10,17763)) return false;
+            
+            var result = DwmSetWindowAttribute(handle, DwmwaBorderColor | DwmwaCaptionColor, ref darkColor,
                 sizeof(int)) == 0;
 
             return result;
 
-        }
-
-        public static bool IsWindows10OrGreater(int build = -1)
-        {
-            return Environment.OSVersion.Version.Major >= 10 && Environment.OSVersion.Version.Build >= build;
         }
     }
 
@@ -227,200 +208,6 @@ namespace X_RayPalette
         }
 
     }
-    public class ImageIntPtr
-    {
-        public static float Width;
-        public static float Height;
-        public static float WidthOut;
-        public static float HeightOut;
-        public static float WidthLoading;
-        public static float HeightLoading;
-        public static Texture Dimg;
-        public static Texture DimgOut;
-        public static Texture DimgLoading;
-        static IntPtr _imgPtr;
-        static IntPtr _imgPtrOut;
-        static IntPtr _imgPtrLoading;
+    
 
-        public static IntPtr CreateImgPtr(string path)
-        {
-            if (Dimg != null)
-            {
-                Program.Renderer.RemoveImGuiBinding(Dimg);
-                Dimg.Dispose();
-                Dimg = null;
-                _imgPtr = IntPtr.Zero;
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-
-            }
-            var img = new ImageSharpTexture(path);
-            Dimg = img.CreateDeviceTexture(Program.Gd, Program.Gd.ResourceFactory);
-            img = null;
-            Width = Dimg.Width;
-            Height = Dimg.Height;
-            _imgPtr = Program.Renderer.GetOrCreateImGuiBinding(Program.Gd.ResourceFactory, Dimg); //saves file - returns the intPtr need for Imgui.Image()
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            Dimg.Dispose();
-            return _imgPtr;
-        }
-        public static IntPtr CreateImgPtrOut(string path)
-        {
-            if (DimgOut != null)
-            {
-                Program.Renderer.RemoveImGuiBinding(DimgOut);
-                DimgOut.Dispose();
-                DimgOut = null;
-                _imgPtrOut = IntPtr.Zero;
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-            }
-            var img = new ImageSharpTexture(path);
-            DimgOut = img.CreateDeviceTexture(Program.Gd, Program.Gd.ResourceFactory);
-            img = null;
-            WidthOut = DimgOut.Width;
-            HeightOut = DimgOut.Height;
-            _imgPtrOut = Program.Renderer.GetOrCreateImGuiBinding(Program.Gd.ResourceFactory, DimgOut); //saves file - returns the intPtr need for Imgui.Image()
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            //dimgOut.Dispose();
-            return _imgPtrOut;
-        }
-        public static IntPtr CreateImgPtrLoading(string path)
-        {
-            if (DimgLoading != null)
-            {
-                Program.Renderer.RemoveImGuiBinding(DimgLoading);
-                DimgLoading.Dispose();
-                DimgLoading = null;
-                _imgPtrLoading = IntPtr.Zero;
-                GC.Collect();
-                GC.WaitForPendingFinalizers();
-            }
-            var img = new ImageSharpTexture(path);
-            DimgLoading = img.CreateDeviceTexture(Program.Gd, Program.Gd.ResourceFactory);
-            img = null;
-            WidthLoading = DimgLoading.Width;
-            HeightLoading = DimgLoading.Height;
-            _imgPtrLoading = Program.Renderer.GetOrCreateImGuiBinding(Program.Gd.ResourceFactory, DimgLoading); //saves file - returns the intPtr need for Imgui.Image()
-            GC.Collect();
-            GC.WaitForPendingFinalizers();
-            DimgLoading.Dispose();
-            return _imgPtrLoading;
-        }
-    }
-    internal static class Filters
-    {
-        public static IEnumerable<NfdFilter> CreateNewNfdFilter()
-        {
-            var filter = new NfdFilter
-            {
-                Description = "Images",
-                Specification = "png,jpg,bmp"
-            };
-            yield return filter;
-        }
-    }
-
-    public static class ColorChanger
-    {
-        public static bool WorkerEnd;
-        public static void Worker(string inputPath, int mode)
-        {
-            WorkerEnd = false;
-            ConvertToLongRainbow(inputPath, ImagePathHelper.ImagesFolderPath() + "\\output.png", mode);
-        }
-
-        static void ConvertToLongRainbow(string inputPath, string outputPath, int mode)
-        {
-            using (Bitmap inputBitmap = new Bitmap(inputPath))
-            {
-                Bitmap outputBitmap = new Bitmap(inputBitmap.Width, inputBitmap.Height);
-
-                for (int y = 0; y < inputBitmap.Height; y++)
-                {
-                    for (int x = 0; x < inputBitmap.Width; x++)
-                    {
-                        Color pixelColor = inputBitmap.GetPixel(x, y);
-                        int grayscaleValue = (int)(0.3 * pixelColor.R + 0.59 * pixelColor.G + 0.11 * pixelColor.B);
-                        Color rainbowColor = Color.FromArgb(0, 0, 0);
-                        if (mode == 0) { rainbowColor = Pm3DColor(grayscaleValue); }
-                        else { rainbowColor = LongRainbowColor(grayscaleValue); }
-                        outputBitmap.SetPixel(x, y, rainbowColor);
-                    }
-                }
-                outputBitmap.Save(outputPath, ImageFormat.Png);
-                Gui.ImageHandlerOut = ImageIntPtr.CreateImgPtrOut(ImagePathHelper.ImagesFolderPath() + "\\output.png");
-                WorkerEnd = true;
-            }
-        }
-
-        static Color LongRainbowColor(int value)
-        {
-            int r, g, b;
-            double f = (double)value / 255;
-
-            if (f <= 0.25)
-            {
-                r = 0;
-                g = 0;
-                b = (int)(255 * (0.25 - f) / 0.25);
-            }
-            else if (f <= 0.5)
-            {
-                r = 0;
-                g = (int)(255 * (f - 0.25) / 0.25);
-                b = 255;
-            }
-            else if (f <= 0.75)
-            {
-                r = (int)(255 * (f - 0.5) / 0.25);
-                g = 255;
-                b = (int)(255 * (0.75 - f) / 0.25);
-            }
-            else
-            {
-                r = 255;
-                g = (int)(255 * (1 - f) / 0.25);
-                b = 0;
-            }
-
-            return Color.FromArgb(r, g, b);
-        }
-
-        static Color Pm3DColor(int value)
-        {
-            int r, g, b;
-            double f = (double)value / 255;
-
-            if (f < 0.25)
-            {
-                r = 0;
-                g = 0;
-                b = (int)(255 * f / 0.25);
-            }
-            else if (f < 0.5)
-            {
-                r = 0;
-                g = (int)(255 * (f - 0.25) / 0.25);
-                b = 255;
-            }
-            else if (f < 0.75)
-            {
-                r = (int)(255 * (f - 0.5) / 0.25);
-                g = 255;
-                b = (int)(255 - 255 * (f - 0.5) / 0.25);
-            }
-            else
-            {
-                r = 255;
-                g = (int)(255 - 255 * (f - 0.75) / 0.25);
-                b = 0;
-            }
-
-            return Color.FromArgb(r, g, b);
-        }
-
-    }
 }
