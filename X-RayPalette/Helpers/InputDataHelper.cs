@@ -1,4 +1,6 @@
-﻿namespace X_RayPalette.Helpers
+﻿using NativeFileDialogExtendedSharp;
+
+namespace X_RayPalette.Helpers
 {
     public static class InputDataHelper
     {
@@ -62,4 +64,18 @@
             AreaName = areaName;
         }
     }
+
+    internal static class InputFilterHelper
+    {
+        public static IEnumerable<NfdFilter> NfdFilter()
+        {
+            var filter = new NfdFilter
+            {
+                Description = "Images",
+                Specification = "png,jpg,bmp"
+            };
+            yield return filter;
+        }
+    }
+
 }

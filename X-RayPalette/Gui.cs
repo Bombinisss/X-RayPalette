@@ -1,8 +1,13 @@
 ﻿using System.Numerics;
 using ImGuiNET;
 using Veldrid.Sdl2;
-using X_RayPalette.Helpers;
 using NativeFileDialogExtendedSharp;
+using X_RayPalette.Views;
+using X_RayPalette.Helpers;
+using X_RayPalette.Views.InfoChange;
+using X_RayPalette.Views.Patient;
+using X_RayPalette.Views.DoctorRegister;
+using X_RayPalette.Services;
 
 namespace X_RayPalette
 {
@@ -18,99 +23,104 @@ namespace X_RayPalette
         public string Path;
         public bool ImagePathExist;
         public IntPtr ImageHandler;
+        public static IntPtr ImageHandlerOut;
+        private IntPtr _imageHandlerLoading;
+        public bool ConvertButton;
 
         private int _theme;
+        private int _colorMode;
         private bool _isRunning;
         private bool _loggedIn;
-        public bool _loggedout;
+        public bool LoggedOut;
 
-        private bool _AdminLoggedIn;
-        private bool AdminAddNewPatient;
-        private bool AdminAddExistingPatient;
-        private bool AdminChangePatientInfo;
-        private bool AdminChangeDoctorInfo;
+        private bool _adminLoggedIn;
+        private bool _adminAddNewPatient;
+        private bool _adminAddExistingPatient;
+        private bool _adminChangePatientInfo;
+        private bool _adminChangeDoctorInfo;
 
         private string _username;
         private string _password;
-        private string _passwordRepeat;
-        private string _usernameRegister;
-        private string _passwordRegister;
 
-        private string _newPatientName;
-        private string _newPatientSurname;
-        private int _newPatientSex;
-        private string _newPatientPesel;
-        private string _newPatientEmail;
-        private string _newPatientPhone;
+        private readonly View _addPatientView;
+        private readonly View _patientAssigment;
+        private readonly View _patientAssigmentAlt;
 
-        private string _newDoctorName;
-        private string _newDoctorSurname;
-        private int _newDoctorSex;
-        private string _newDoctorPesel;
-        private string _newDoctorEmail;
-        private string _newDoctorPhone;
-        private PhoneAreaCode _newDoctorPhoneAreaCode;
-        private string _tempdataDoc_AP;
-        private string _tempdataDoc_EP;
-        private string _tempdataDoc_CI;
-        private string _tempdataPatient_CI;
-        private string _tempdataPatient_EP;
+        private readonly View _doctorRegister;
 
-        private string _newPatientCity;
-        private string _newPatientStreet;
-        private string _newPatientHouseNumber;
-        private string _newPatientFlatNumber;
-        private string _newPatientPostCode;
-        private string _newPatientCountry;
-        private PhoneAreaCode _newPatientPhoneAreaCode;
+        private readonly View _infoChangeWrapper;
+        private readonly View _infoChangeDoctor;
+        private readonly View _infoChangePatient;
+
+        //color conversion services + image render services
+        private readonly ColorConversionService _colorConvert;
+        private readonly ImageRenderService _imageRender;
+        private readonly ImageRenderService _imageRenderOut;
+        private readonly ImageRenderService _imageRenderLoading;
+
         public Gui(Sdl2Window windowCopy)
         {
+            _colorConvert = new ColorConversionService();
+
+            //render instaces for source, out and loading image
+            _imageRender = new ImageRenderService();
+            _imageRenderOut = new ImageRenderService();
+            _imageRenderLoading = new ImageRenderService();
+
             ImagePathExist = false;
+            ConvertButton = false;
             DevOpen = false;
             _theme = 0;
+            _colorMode = 0;
             _windowCopy = windowCopy;
             _isRunning = true;
             _loggedIn = false;
-            _loggedout = false;
+            LoggedOut = false;
 
-            _AdminLoggedIn = false;
-            AdminAddExistingPatient = false;
-            AdminAddNewPatient = false;
+            _adminLoggedIn = false;
+            _adminAddExistingPatient = false;
+            _adminAddNewPatient = false;
 
             _username = "";
             _password = "";
-            _passwordRepeat = "";
-            _usernameRegister = "";
-            _passwordRegister = "";
 
-            _newDoctorName = "";
-            _newDoctorSurname = "";
-            _newDoctorSex = 1;
-            _newDoctorPesel = "";
-            _newDoctorEmail = "";
-            _newDoctorPhone = "";
-            _newDoctorPhoneAreaCode = InputDataHelper.PhoneAreaCodes.First();
+            //config for patients view
+            _addPatientView = new PatientAdd();
+            _addPatientView.OnBack += (sender, args) => { _adminAddNewPatient = false; };
 
-            _tempdataDoc_AP = "Choose Doctor";
-            _tempdataDoc_CI = "Choose Doctor";
-            _tempdataDoc_EP = "Choose Doctor";
-            _tempdataPatient_CI = "Choose Patient";
-            _tempdataPatient_EP = "Choose Patient";
+            _patientAssigment = new PatientAssignment();
+            _patientAssigment.OnBack += (sender, args) => { _adminAddExistingPatient = false; };
 
-            _newPatientName = "";
-            _newPatientSurname = "";
-            _newPatientSex = 1;
-            _newPatientPesel = "";
-            _newPatientEmail = "";
-            _newPatientPhone = "";
+            _patientAssigmentAlt = new PatientAssigmentWrapper();
+            _patientAssigmentAlt.OnBack += (sender, args) =>
+            {
+                _adminAddNewPatient = false;
+                _adminAddExistingPatient = false;
+                _patientAssigment.Back();
+                _addPatientView.Back();
+            };
 
-            _newPatientCity = "";
-            _newPatientStreet = "";
-            _newPatientHouseNumber = "";
-            _newPatientFlatNumber = "";
-            _newPatientPostCode = "";    
-            _newPatientCountry = "";
-            _newPatientPhoneAreaCode = InputDataHelper.PhoneAreaCodes.First();
+            //config for doctor
+
+            _doctorRegister = new DoctorRegister();
+            //doctorRegister.OnBack += (sender, args) => { AdminAddNewPatient = false; };
+
+
+            //config for change info view
+            _infoChangeDoctor = new DoctorInfoChange();
+            _infoChangeDoctor.OnBack += (sender, args) => { _adminChangeDoctorInfo = false; };
+            _infoChangePatient = new PatientInfoChange();
+            _infoChangePatient.OnBack += (sender, args) => { _adminChangePatientInfo = false; };
+
+            _infoChangeWrapper = new WrapperInfoChange();
+            _infoChangeWrapper.OnBack += (sender, args) =>
+            {
+                _adminChangeDoctorInfo = false;
+                _adminChangePatientInfo = false;
+                _infoChangeDoctor.Back();
+                _infoChangePatient.Back();
+            };
+
         }
 
         public void SubmitUi()
@@ -121,62 +131,68 @@ namespace X_RayPalette
 
             if (ImGui.BeginMenuBar())
             {
-                if(_loggedIn || _AdminLoggedIn)
-                if (ImGui.BeginMenu("File"))
-                {
-                    if (ImGui.MenuItem("Close")) { _isRunning= false; }
-
-                    if (ImGui.BeginMenu("Settings"))
+                if (_loggedIn || _adminLoggedIn)
+                    if (ImGui.BeginMenu("File"))
                     {
-                        ImGui.Text("Theme: ");
-                        ImGui.SameLine();
+                        if (ImGui.MenuItem("Close")) { _isRunning = false; }
 
-                        if (ImGui.RadioButton("Light", ref _theme, 0))
+                        if (ImGui.BeginMenu("Settings"))
                         {
-                            DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, false, 0x00FFFFFF);
-                            _flags &= ~ImGuiWindowFlags.NoBackground;
-                            if (!DarkTitleBarClass.IsWindows10OrGreater(22000))
+                            ImGui.Text("Theme:      ");
+                            ImGui.SameLine();
+
+                            if (ImGui.RadioButton("Light", ref _theme, 0))
                             {
-                                _windowCopy.Visible = false;
-                                _windowCopy.Visible = true;
+                                DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, false, 0x00FFFFFF);
+                                _flags &= ~ImGuiWindowFlags.NoBackground;
+                                if (!EnviromentHelpers.IsSupportedOS(10, 22000))
+                                {
+                                    _windowCopy.Visible = false;
+                                    _windowCopy.Visible = true;
+                                }
+                                SetupImGuiStyle0();
                             }
-                            SetupImGuiStyle0();
+                            ImGui.SameLine();
+                            if (ImGui.RadioButton("Dark", ref _theme, 1))
+                            {
+                                DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, true, 0x00000000);
+                                _flags |= ImGuiWindowFlags.NoBackground;
+                                if (!EnviromentHelpers.IsSupportedOS(10, 22000))
+                                {
+                                    _windowCopy.Visible = false;
+                                    _windowCopy.Visible = true;
+                                }
+                                SetupImGuiStyle1();
+                            }
+
+                            ImGui.Text("Color Mode: ");
+                            ImGui.SameLine();
+                            ImGui.RadioButton("PM3D", ref _colorMode, 0);
+                            ImGui.SameLine();
+                            ImGui.RadioButton("Long Rainbow", ref _colorMode, 1);
+
+                            ImGui.EndMenu();
                         }
-                        ImGui.SameLine();
-                        if (ImGui.RadioButton("Dark", ref _theme, 1))
+
+                        if (ImGui.MenuItem("Logout"))
                         {
-                            DarkTitleBarClass.UseImmersiveDarkMode(_windowCopy.Handle, true,0x00000000);
-                            _flags |= ImGuiWindowFlags.NoBackground;
-                            if (!DarkTitleBarClass.IsWindows10OrGreater(22000))
-                            {
-                                _windowCopy.Visible = false;
-                                _windowCopy.Visible = true;
-                            }
-                            SetupImGuiStyle1();
+                            _flags &= ~ImGuiWindowFlags.MenuBar;
+                            _windowCopy.Height = 150;
+                            _windowCopy.Width = 400;
+                            LoggedOut = true;
+                            return;
                         }
 
                         ImGui.EndMenu();
                     }
-
-                    if (ImGui.MenuItem("Logout"))
-                    {
-                        _flags &= ~ImGuiWindowFlags.MenuBar;
-                        _windowCopy.Height = 150;
-                        _windowCopy.Width = 400;
-                        _loggedout = true;
-                        return;
-                    }
-
-                    ImGui.EndMenu();
-                }
-            ImGui.EndMenuBar();
+                ImGui.EndMenuBar();
             }
-            
-            if (_loggedIn || _AdminLoggedIn)
+
+            if (_loggedIn || _adminLoggedIn)
             {
                 if (ImGui.BeginTabBar("TabBar", ImGuiTabBarFlags.FittingPolicyResizeDown))
                 {
-                    if (!_AdminLoggedIn)
+                    if (!_adminLoggedIn)
                     {
                         if (ImGui.BeginTabItem("My Patients"))
                         {
@@ -185,377 +201,107 @@ namespace X_RayPalette
 
                             ImGui.EndTabItem();
                         }
-                    }                   
+                    }
                     if (ImGui.BeginTabItem("Add Patient"))
                     {
-                        if (_AdminLoggedIn && !AdminAddExistingPatient && !AdminAddNewPatient)
-                        {                           
-                            TextCentered("Choose option", "Add new Patient", "Change Patient Assigment", "OR",ref AdminAddNewPatient,ref AdminAddExistingPatient);                           
-                        }
-                        if (AdminAddExistingPatient || AdminAddNewPatient)
+                        if (_adminLoggedIn && !_adminAddExistingPatient && !_adminAddNewPatient)
                         {
-                            ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.0f, 0.749f, 1.0f, 0.20f));
-                            if (ImGui.Button("< back"))
-                            {
-                                AdminAddNewPatient = false;
-                                AdminAddExistingPatient = false;
-                                _tempdataDoc_EP = "Choose Doctor";
-                                _tempdataPatient_EP = "Choose Patient";
-                                _tempdataDoc_AP = "Choose Doctor";
-                            }
-                            ImGui.PopStyleColor();
-                            ImGui.Separator();                          
+                            RenderHelper.TextCentered("Choose option", "Add new Patient", "Change Patient Assigment", "OR", ref _adminAddNewPatient, ref _adminAddExistingPatient);
                         }
-                        if (AdminAddNewPatient || _loggedIn)
+                        if (_adminAddExistingPatient || _adminAddNewPatient)
                         {
-                                                                           
-                            ImGui.PushItemWidth(208);
-                            ImGui.Text("Name: ");
-                            ImGui.SameLine(110);
-                            ImGui.InputText("##name##", ref _newPatientName, 128);
-                            ImGui.SameLine();
-                            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
-
-                            ImGui.Text("Surname: ");
-                            ImGui.SameLine(110);
-                            ImGui.InputText("##surname##", ref _newPatientSurname, 128);
-                            ImGui.SameLine();
-                            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
-
-                            ImGui.Text("Sex: ");
-                            ImGui.SameLine(110);
-
-                            ImGui.RadioButton("Men", ref _newPatientSex, 1);
-                            ImGui.SameLine(200);
-                            ImGui.RadioButton("Woman", ref _newPatientSex, 2);
-
-                            ImGui.Text("PESEL: ");
-                            ImGui.SameLine(110);
-                            ImGui.InputText("##pesel##", ref _newPatientPesel, 11);
-                            ImGui.SameLine();
-                            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
-
-                            ImGui.Text("E-mail: ");
-                            ImGui.SameLine(110);
-                            ImGui.InputText("##emailadress##", ref _newPatientEmail, 128);
-
-                            ImGui.Text("Phone: ");
-                            ImGui.SameLine(110);
-                            ImGui.PopItemWidth();
-                            ImGui.PushItemWidth(50);
-                            if (ImGui.BeginCombo("##phoneArea", "+" + _newPatientPhoneAreaCode.AreaCode))
-                            {
-                                foreach (var areaCode in InputDataHelper.PhoneAreaCodes)
-                                {
-                                    if (ImGui.Selectable("+" + areaCode.AreaCode + " " + areaCode.AreaName))
-                                    {
-                                        _newPatientPhoneAreaCode = areaCode;
-                                    }
-                                }
-                                ImGui.EndCombo();
-                            }
-                            ImGui.PopItemWidth();
-                            ImGui.SameLine(0);
-                            ImGui.PushItemWidth(150);
-                            ImGui.InputText("##phone##", ref _newPatientPhone, 15, ImGuiInputTextFlags.CharsDecimal);
-                            ImGui.SameLine();
-                            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
-                            ImGui.PopItemWidth();
-
-                            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A - required field");
-
-                            ImGui.PushItemWidth(208);
-                            ImGui.Text("Address");
-                            ImGui.Separator();
-                            ImGui.Text("City: ");
-                            ImGui.SameLine(110);
-                            ImGui.InputText("##city##", ref _newPatientCity, 128);
-                            ImGui.Text("Street: ");
-                            ImGui.SameLine(110);
-                            ImGui.InputText("##street##", ref _newPatientStreet, 128);
-                            ImGui.Text("House number: ");
-                            ImGui.SameLine(110);
-                            ImGui.InputText("##house##", ref _newPatientHouseNumber, 5);
-                            ImGui.Text("Flat number: ");
-                            ImGui.SameLine(110);
-                            ImGui.InputText("##flat##", ref _newPatientFlatNumber, 5);
-                            ImGui.Text("Post code: ");
-                            ImGui.SameLine(110);
-                            ImGui.InputText("##post##", ref _newPatientPostCode, 6);
-                            ImGui.Text("Country: ");
-                            ImGui.SameLine(110);
-                            ImGui.InputText("##country##", ref _newPatientCountry, 128);
-                            ImGui.Separator();
-                            ImGui.PopItemWidth();
-
-                            if (!_AdminLoggedIn)
-                            {
-                                ImGui.Text("Images");
-                                ImGui.Separator();
-                                ImGui.Button("Upload Images"); // TODO: add file Popup and upload images
-                                ImGui.Separator();             // TODO: display uploaded images
-                            }
-
-                            if (_AdminLoggedIn)
-                            {
-                                ImGui.PushItemWidth(150);
-                                string[] temp = { "dr1", "dr2" };
-                                if (ImGui.BeginCombo("##Doctorchoose##", _tempdataDoc_AP))
-                                {
-
-                                    foreach (var doc in temp)
-                                    {
-                                        if (ImGui.Selectable(doc))
-                                        {
-                                             _tempdataDoc_AP = doc;
-                                        }
-                                    }
-                                    ImGui.EndCombo();
-                                }
-                                ImGui.PopItemWidth();
-                            }
-                            ImGui.NewLine();
-                            if (ImGui.Button("Add Patient"))
-                            {
-                                if (_AdminLoggedIn)
-                                {
-                                    AdminAddNewPatient = false;
-                                    _tempdataDoc_AP = "Choose Doctor";
-                                    // TODO: add patient to database from admin view (to choosen doctor)
-                                }
-                                // TODO: add patient to database
-                            }                          
+                            _patientAssigmentAlt.Render(_adminLoggedIn);
                         }
-                        if (AdminAddExistingPatient)
+                        if (_adminAddNewPatient || _loggedIn)
                         {
-                            ImGui.PushItemWidth(150);
-                            ImGui.Text("Select Patient");
-                            ImGui.SameLine(245);
-                            ImGui.Text("Select new Doctor");
-                            string[] temp1 = { "patient1", "patient2" };
-                            if (ImGui.BeginCombo("##PatientChange##", _tempdataPatient_EP))
-                            {
-                                foreach (var patient in temp1)
-                                {
-                                    if (ImGui.Selectable(patient))
-                                    {
-                                        _tempdataPatient_EP = patient;
-                                    }
-                                }
-                                ImGui.EndCombo();
-                            }
-                            ImGui.SameLine();
-                            ImGui.Text("assigne to");
-                            ImGui.SameLine();
-                            string[] temp2 = { "dr1", "dr2" };
-                            if (ImGui.BeginCombo("##DocChange##", _tempdataDoc_EP))
-                            {
-                                foreach (var doc in temp2)
-                                {
-                                    if (ImGui.Selectable(doc))
-                                    {
-                                        _tempdataDoc_EP = doc;
-                                    }
-                                }
-                                ImGui.EndCombo();
-                            }
-                            ImGui.Separator();
-                            if (ImGui.Button("Change assigment"))
-                            {
-                                
-                               //TODO: delete previous patient doc assigment and add to new doc
-                                AdminAddExistingPatient = false;
-                                _tempdataPatient_EP = "Choose Patient";
-                                _tempdataDoc_EP = "Choose Doctor";
-                            }
-                            ImGui.PopItemWidth();
+                            _addPatientView.Render(_adminLoggedIn);
+
+                        }
+                        if (_adminAddExistingPatient)
+                        {
+                            _patientAssigment.Render(_adminLoggedIn);
                         }
                         ImGui.EndTabItem();
                     }//END add patient tab
-                    if (_AdminLoggedIn)
-                    {        
-                        
+                    if (_adminLoggedIn)
+                    {
+
                         if (ImGui.BeginTabItem("Register Doctor"))
                         {
-                            ImGui.Text("Name: ");
-                            ImGui.SameLine(110);
-                            ImGui.InputText("##Doctorname##", ref _newDoctorName, 128);
-                            ImGui.SameLine();
-                            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
-
-                            ImGui.Text("Surname: ");
-                            ImGui.SameLine(110);
-                            ImGui.InputText("##Doctorsurname##", ref _newDoctorSurname, 128);
-                            ImGui.SameLine();
-                            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
-
-                            ImGui.Text("Sex: ");
-                            ImGui.SameLine(110);
-
-                            ImGui.RadioButton("Men", ref _newDoctorSex, 1);
-                            ImGui.SameLine(200);
-                            ImGui.RadioButton("Woman", ref _newDoctorSex, 2);
-
-                            ImGui.Text("PESEL: ");
-                            ImGui.SameLine(110);
-                            ImGui.InputText("##Doctorpesel##", ref _newDoctorPesel, 11);
-                            ImGui.SameLine();
-                            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
-
-                            ImGui.Text("E-mail: ");
-                            ImGui.SameLine(110);
-                            ImGui.InputText("##Doctoremailadress##", ref _newDoctorEmail, 128);
-
-                            ImGui.Text("Phone: ");
-                            ImGui.SameLine(110);
-                            ImGui.PushItemWidth(50);
-                            if (ImGui.BeginCombo("##DoctorphoneArea", "+" + _newDoctorPhoneAreaCode.AreaCode))
-                            {
-                                foreach (var areaCode in InputDataHelper.PhoneAreaCodes)
-                                {
-                                    if (ImGui.Selectable("+" + areaCode.AreaCode + " " + areaCode.AreaName))
-                                    {
-                                        _newDoctorPhoneAreaCode = areaCode;
-                                    }
-                                }
-                                ImGui.EndCombo();
-                            }
-                            ImGui.PopItemWidth();
-                            ImGui.SameLine(0);
-                            ImGui.PushItemWidth(150);
-                            ImGui.InputText("##Doctorphone##", ref _newDoctorPhone, 15, ImGuiInputTextFlags.CharsDecimal);
-                            ImGui.SameLine();
-                            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
-
-                            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A - required field");
-
-                            ImGui.Separator();
-                            ImGui.Text("Username: ");
-                            ImGui.SameLine(110);
-                            ImGui.InputText("##usernameReg##", ref _usernameRegister, 128);
-                            ImGui.SameLine();
-                            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
-                            ImGui.Text("Password: ");
-                            ImGui.SameLine(110);
-                            ImGui.InputText("##passwdReg##", ref _passwordRegister, 128, ImGuiInputTextFlags.Password);
-                            ImGui.SameLine();
-                            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
-                            ImGui.Text("Confirm Pwd: ");
-                            ImGui.SameLine(110);
-                            ImGui.InputText("##passwd2##", ref _passwordRepeat, 128, ImGuiInputTextFlags.Password);
-                            ImGui.SameLine();
-                            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
-
-                            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A - required field");
-
-                            // Register account
-                            if (ImGui.Button("Register"))
-                            {
-                                //to do: add to database
-                            }
+                            _doctorRegister.Render(_adminLoggedIn);
                             ImGui.EndTabItem();
                         }
-                        
+
                     }
-                    if (_AdminLoggedIn)
+                    if (_adminLoggedIn)
                     {
                         if (ImGui.BeginTabItem("Change information"))
                         {
                             ImGui.PushItemWidth(150);
-                            if (!AdminChangeDoctorInfo && !AdminChangePatientInfo)
+                            if (!_adminChangeDoctorInfo && !_adminChangePatientInfo)
                             {
-                                TextCentered("Choose user type", "Patients", "Doctors", "OR", ref AdminChangePatientInfo, ref AdminChangeDoctorInfo);
+                                RenderHelper.TextCentered("Choose user type", "Patients", "Doctors", "OR", ref _adminChangePatientInfo, ref _adminChangeDoctorInfo);
                             }
-                            if (AdminChangePatientInfo || AdminChangeDoctorInfo)
+                            if (_adminChangePatientInfo || _adminChangeDoctorInfo)
                             {
-                                ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.0f, 0.749f, 1.0f, 0.20f));
-                                if (ImGui.Button("< back"))
-                                {
-                                    AdminChangeDoctorInfo = false;
-                                    AdminChangePatientInfo = false;
-                                    _tempdataDoc_CI = "Choose Doctor";
-                                    _tempdataPatient_CI = "Choose Patient";
-                                }
-                                ImGui.PopStyleColor();
+                                _infoChangeWrapper.Render(_adminLoggedIn);
                             }
-                            if (AdminChangeDoctorInfo)
+                            if (_adminChangeDoctorInfo)
                             {
-                                ImGui.Text("Choose:");
-                                ImGui.SameLine();
-                                string[] temp2 = { "dr1", "dr2" };
-                                if (ImGui.BeginCombo("##DocInfoChange##", _tempdataDoc_CI))
-                                {
-                                    foreach (var doc in temp2)
-                                    {
-                                        if (ImGui.Selectable(doc))
-                                        {
-                                            _tempdataDoc_CI = doc;
-                                        }
-                                    }
-                                    ImGui.EndCombo();
-                                }
-                                ImGui.Separator();
-                                ImGui.Text("when DB will work there will be shown chosen doctor's informations with change function");
-                                ImGui.Separator();
-                                if (ImGui.Button("Confirm changes"))
-                                {
-                                    //TODO: replacing changed values ​​in the database
-                                    _tempdataDoc_CI = "Choose Doctor";
-                                    AdminChangeDoctorInfo = false;
-                                }
+                                _infoChangeDoctor.Render(_adminLoggedIn);
                             }
-                            if (AdminChangePatientInfo)
+                            if (_adminChangePatientInfo)
                             {
-                                ImGui.Text("Choose:");
-                                ImGui.SameLine();
-                                string[] temp2 = { "patient1", "patient2" };
-                                if (ImGui.BeginCombo("##PatientInfoChange##", _tempdataPatient_CI))
-                                {
-                                    foreach (var patient in temp2)
-                                    {
-                                        if (ImGui.Selectable(patient))
-                                        {
-                                            _tempdataPatient_CI = patient;
-                                        }
-                                    }
-                                    ImGui.EndCombo();
-                                }
-                                ImGui.Separator();
-                                ImGui.Text("when DB will work there will be shown chosen patient's informations with change function");
-                                ImGui.Separator();
-                                if (ImGui.Button("Confirm changes"))
-                                {
-                                    //TODO: replacing changed values ​​in the database
-                                    _tempdataPatient_CI = "Choose Patient";
-                                    AdminChangePatientInfo = false;
-                                }
+                                _infoChangePatient.Render(_adminLoggedIn);
                             }
                             ImGui.PopItemWidth();
                             ImGui.EndTabItem();
                         }
                     }
                     if (ImGui.BeginTabItem("Dev")) //obviously will be moved in the future
-                    {              
+                    {
                         DevOpen = true;
                         //to do: select or drop image here and convert to long rainbow
                         if (ImGui.Button("Select Image"))
                         {
-                            NfdDialogResult path = Nfd.FileOpen(Filters.CreateNewNfdFilter(), "C:\\"); //path - selected image path
+                            NfdDialogResult path = Nfd.FileOpen(InputFilterHelper.NfdFilter(), "C:\\"); //path - selected image path
                             Console.WriteLine(path.Path); //check image path
                             if (path.Path != null)
                             {
+                                ConvertButton = false;
                                 Path = path.Path;
-                                Thread thread = new Thread(() => ColorChanger.Worker(Path));
-                                thread.Start();
+
+                                ImagePathExist = true;
                             }
-                            
-                            ImagePathExist = true;
-                            ImageHandler = ImageIntPtr.CreateImgPtr(Path);
+                            if (ImagePathExist)
+                            {
+                                ImageHandler = _imageRender.Create(Path);
+                            }
+                        }
+                        if (ImGui.Button("ConvertImage"))
+                        {
+                            if (Path != null)
+                            {
+                                ConvertButton = true;
+                                Thread thread = new Thread(() => _colorConvert.Start(Path, _colorMode,_imageRenderOut));
+                                thread.Start();
+                                ImagePathHelper.ImagesFolderPath();
+                                _imageHandlerLoading = _imageRenderLoading.Create(ImagePathHelper.ImagesFolderPath() + "\\loading.jpg");
+                            }
 
                         }
                         if (ImagePathExist && Path != null)
                         {
-                            ImGui.Image(this.ImageHandler, new Vector2(ImageIntPtr.width, ImageIntPtr.height));
+                            ImGui.Image(this.ImageHandler, new Vector2(_imageRender.Width, _imageRender.Height));
+
+                            if (ConvertButton && _colorConvert.IsProcessing)
+                            {
+                                ImGui.Image(ImageHandlerOut, new Vector2(_imageRenderOut.Width, _imageRenderOut.Height));
+                            }
+                            else if (ConvertButton)
+                            {
+                                ImGui.Image(this._imageHandlerLoading, new Vector2(_imageRenderLoading.Width, _imageRenderLoading.Height));
+                            }
                         }
                         ImGui.EndTabItem();
                     }
@@ -563,59 +309,36 @@ namespace X_RayPalette
             }
             else
             {
-                if (ImGui.BeginTabBar("TabBar", ImGuiTabBarFlags.FittingPolicyResizeDown))
+                string pass;
+                ImGui.Text("Username: ");
+                ImGui.SameLine(0);
+                ImGui.InputText("##username##", ref _username, 128);
+                ImGui.Text("Password: ");
+                ImGui.SameLine(0);
+                ImGui.InputText("##passwd##", ref _password, 128, ImGuiInputTextFlags.Password);
+                if (ImGui.Button("Login")) // Admin login: Admin password: Admin12
                 {
-                    if (ImGui.BeginTabItem("Login"))
+
+                    if (Program.dbService.AuthUser(_username, _password))
                     {
-                        ImGui.Text("Username: ");
-                        ImGui.SameLine(0);
-                        ImGui.InputText("##username##", ref _username, 128);
-                        ImGui.Text("Password: ");
-                        ImGui.SameLine(0);
-                        ImGui.InputText("##passwd##", ref _password, 128, ImGuiInputTextFlags.Password);
-                        if (ImGui.Button("Login"))
+                        if (_username == "Admin")
                         {
-                            if (_username == "admin" && _password == "admin")
-                            {
-                                _AdminLoggedIn = true;
-                            }
-                            else
-                            {
-                                _loggedIn = true;
-                            }
-                            //to do: check login
-                            _flags |= ImGuiWindowFlags.MenuBar;
-                            _windowCopy.Height = 540;
-                            _windowCopy.Width = 960;                           
+                            _adminLoggedIn = true;
                         }
-                        ImGui.EndTabItem();
+                        else
+                        {
+                            _loggedIn = true;
+                        }
+                        Globals.LoggedDoc = _username;
+                        _flags |= ImGuiWindowFlags.MenuBar;
+                        _windowCopy.Height = 540;
+                        _windowCopy.Width = 960;
+                    }
+                    else // to do: inform user about invalid inputs
+                    {
+                        Console.WriteLine("Invalid username or password.");
                     }
                 }
-            }
-        }
-        static void TextCentered(string header, string b1, string b2, string or, ref bool b1value, ref bool b2value)
-        {
-            var windowWidth = ImGui.GetWindowSize();
-            var headerWidth = ImGui.CalcTextSize(header);
-            var b1Width = ImGui.CalcTextSize(b1);
-            var orWidth = ImGui.CalcTextSize("O");
-            var space = ImGui.CalcTextSize(" ");
-
-            ImGui.SetCursorPosX((windowWidth.X - headerWidth.X) * 0.5f);
-            ImGui.Text(header);
-
-            ImGui.SetCursorPosX(windowWidth.X * 0.5f - b1Width.X - 2 * orWidth.X - space.X - 3.0f);
-
-            if (ImGui.Button(b1))
-            {
-                b1value = true;
-            }
-            ImGui.SameLine();
-            ImGui.Text(or);
-            ImGui.SameLine();
-            if (ImGui.Button(b2))
-            {
-                b2value = true;
             }
         }
     }
