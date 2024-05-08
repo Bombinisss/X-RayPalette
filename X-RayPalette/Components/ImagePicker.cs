@@ -53,11 +53,14 @@ namespace X_RayPalette.Components
             if (clicked)
             {
                 NfdDialogResult path = Nfd.FileOpen(InputFilterHelper.NfdFilter(), "C:\\"); //path - selected image path
-                                                                                            // Console.WriteLine(path.Path); //check image path
-                _onPicked(path.Path);
+
+                // Console.WriteLine(path.Path); //check image path
+                if (_onPicked != null)
+                    _onPicked(path.Path);
                 if (path.Path != null)
                 {
-                    _onPickedvalid(path.Path);
+                    if (_onPickedvalid != null)
+                        _onPickedvalid(path.Path);
                 }
             }
             if (_width.HasValue)

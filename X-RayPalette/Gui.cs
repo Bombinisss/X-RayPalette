@@ -268,6 +268,7 @@ namespace X_RayPalette
                             //onpickedValid -> always valid path
                             Console.WriteLine(path); //check image path
                             ConvertButton = false;
+                            ImagePathExist = true;
                             Path = path;
                             ImageHandler = _imageRender.Create(Path);
                         }).Render();
