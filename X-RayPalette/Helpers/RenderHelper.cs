@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using X_RayPalette.Components;
 
 namespace X_RayPalette.Helpers
 {
@@ -22,14 +23,15 @@ namespace X_RayPalette.Helpers
 
             ImGui.SetCursorPosX(windowWidth.X * 0.5f - b1Width.X - 2 * orWidth.X - space.X - 3.0f);
 
-            if (ImGui.Button(b1))
+           
+            if (new Button(b1).Render())
             {
                 b1Value = true;
             }
             ImGui.SameLine();
             ImGui.Text(or);
             ImGui.SameLine();
-            if (ImGui.Button(b2))
+            if (new Button(b2).Render())
             {
                 b2Value = true;
             }

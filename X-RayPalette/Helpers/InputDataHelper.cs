@@ -63,6 +63,10 @@ namespace X_RayPalette.Helpers
             AreaCode = areaCode;
             AreaName = areaName;
         }
+        public override string ToString()
+        {
+            return "+" + AreaCode + " " + AreaName;
+        }
     }
 
     internal static class InputFilterHelper

@@ -7,6 +7,7 @@ using System.Numerics;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
+using X_RayPalette.Components;
 using X_RayPalette.Helpers;
 
 
@@ -29,7 +30,7 @@ namespace X_RayPalette.Views.InfoChange
         }
 
     }
-        internal class DoctorInfoChange : View
+    internal class DoctorInfoChange : View
     {
         EventProgram EventProgram = new EventProgram();
         public string _tempdataDocChange
@@ -93,19 +94,11 @@ namespace X_RayPalette.Views.InfoChange
             }
             _nameArray.ToArray();
             reader.Close();
-            if (ImGui.BeginCombo("##DocInfoChange##", _tempdataDocCi))
+            new ComboBox<string>(_tempdataDocCi,"##DocInfoChange##", _nameArray).OnSelect((string val) =>
             {
-                foreach (var doc in _nameArray)
-                {
-                    if (ImGui.Selectable(doc))
-                    {
-                        _tempdataDocCi = doc;
-                    }
-                }
-                EventProgram.HandleComboChanged(_tempdataDocCi);
-                ImGui.EndCombo();
-                // it's perma looking at the value of _tempdataDocCi not only when changing idk how to fix it for now 
-            }
+                _tempdataDocCi = val;
+                //event
+            }).Render();
 
             ImGui.Separator();
             if (_tempdataDocCi != "Choose Doctor")
@@ -142,19 +135,7 @@ namespace X_RayPalette.Views.InfoChange
 
                 ImGui.Text("Phone: ");
                 ImGui.SameLine(110);
-                ImGui.PushItemWidth(50);
-                if (ImGui.BeginCombo("##DoctorphoneArea", "+" + _updateDoctorPhoneAreaCode.AreaCode))
-                {
-                    foreach (var areaCode in InputDataHelper.PhoneAreaCodes)
-                    {
-                        if (ImGui.Selectable("+" + areaCode.AreaCode + " " + areaCode.AreaName))
-                        {
-                            _updateDoctorPhoneAreaCode = areaCode;
-                        }
-                    }
-                    ImGui.EndCombo();
-                }
-                ImGui.PopItemWidth();
+                new ComboBox<PhoneAreaCode>(_updateDoctorPhoneAreaCode,"##DoctorphoneArea", InputDataHelper.PhoneAreaCodes).Width(50).OnSelect((x) => _updateDoctorPhoneAreaCode = x).Render();
                 ImGui.SameLine(0);
                 ImGui.PushItemWidth(150);
                 ImGui.InputText("##Doctorphone##", ref _updateDoctorPhone, 15, ImGuiInputTextFlags.CharsDecimal);
@@ -182,14 +163,11 @@ namespace X_RayPalette.Views.InfoChange
 
                 ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A - required field");
                 ImGui.Separator();
-            }       
-
-
-            if (ImGui.Button("Confirm changes"))
-            {
-                //TODO: replacing changed values in the database
-                Back();
             }
+
+            new Button("Confirm changes").OnClick(Back).Render();
+
+
         }
     }
 }
