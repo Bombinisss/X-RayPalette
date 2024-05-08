@@ -263,21 +263,13 @@ namespace X_RayPalette
                     {
                         DevOpen = true;
                         //to do: select or drop image here and convert to long rainbow
-                        new Button("Select Image").OnClick(() =>
+                        new ImagePicker("Select Image").OnPickedValid(path =>
                         {
-                            NfdDialogResult path = Nfd.FileOpen(InputFilterHelper.NfdFilter(), "C:\\"); //path - selected image path
-                            Console.WriteLine(path.Path); //check image path
-                            if (path.Path != null)
-                            {
-                                ConvertButton = false;
-                                Path = path.Path;
-
-                                ImagePathExist = true;
-                            }
-                            if (ImagePathExist)
-                            {
-                                ImageHandler = _imageRender.Create(Path);
-                            }
+                            //onpickedValid -> always valid path
+                            Console.WriteLine(path); //check image path
+                            ConvertButton = false;
+                            Path = path;
+                            ImageHandler = _imageRender.Create(Path);
                         }).Render();
                         new Button("ConvertImage").OnClick(() =>
                         {
