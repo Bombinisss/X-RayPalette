@@ -33,6 +33,7 @@ namespace X_RayPalette
         private bool _isRunning;
         private bool _loggedIn;
         public bool LoggedOut;
+        private bool _invalidPass;
 
         private bool _adminLoggedIn;
         private bool _adminAddNewPatient;
@@ -77,6 +78,7 @@ namespace X_RayPalette
             _isRunning = true;
             _loggedIn = false;
             LoggedOut = false;
+            _invalidPass = false;
 
             _adminLoggedIn = false;
             _adminAddExistingPatient = false;
@@ -304,14 +306,20 @@ namespace X_RayPalette
             }
             else
             {
-                string pass;
-                ImGui.Text("Username: ");
-                ImGui.SameLine(0);
-                ImGui.InputText("##username##", ref _username, 128);
-                ImGui.Text("Password: ");
-                ImGui.SameLine(0);
-                ImGui.InputText("##passwd##", ref _password, 128, ImGuiInputTextFlags.Password);
-
+                string _invalidPassMsg = "Invalid username or password.";
+               
+                new TextInput(_username, "##username##").OnInput(v => _username = v).Title("Username: ", 0).Render();
+                new TextInput(_password, "##password##").InputType(ImGuiInputTextFlags.Password).Title("Password: ", 0).OnInput(v => _password = v).OnInputChanged((v, x) =>
+                {
+                    //clear after other password typed
+                    _invalidPass = false;
+                }).Render();
+                if (_invalidPass)
+                {
+                    ImGui.NewLine();
+                    ImGui.SameLine(90);
+                    ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), _invalidPassMsg);
+                }
                 new Button("Login").OnClick(() =>
                 {
                     if (Program.dbService.AuthUser(_username, _password))
@@ -331,6 +339,7 @@ namespace X_RayPalette
                     }
                     else
                     {
+                        _invalidPass = true;
                         Console.WriteLine("Invalid username or password.");
                     }
                 }).Render();
