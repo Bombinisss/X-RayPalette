@@ -5,6 +5,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using X_RayPalette.Components;
 
 namespace X_RayPalette.Views.Patient
 {
@@ -18,10 +19,7 @@ namespace X_RayPalette.Views.Patient
         public override void Render(bool isAdmin)
         {
             ImGui.PushStyleColor(ImGuiCol.Button, new Vector4(0.0f, 0.749f, 1.0f, 0.20f));
-            if (ImGui.Button("< back"))
-            {
-                Back();
-            }
+            new Button("< back").OnClick(Back).Render();
             ImGui.PopStyleColor();
             ImGui.Separator();
         }

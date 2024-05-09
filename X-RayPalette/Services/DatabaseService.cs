@@ -1,4 +1,5 @@
-﻿using MySql.Data.MySqlClient;
+﻿using Microsoft.VisualBasic;
+using MySql.Data.MySqlClient;
 using System.Dynamic;
 
 namespace X_RayPalette.Services
@@ -12,7 +13,7 @@ namespace X_RayPalette.Services
         private int _port;
         bool _isConnected = false;
         private MySqlConnection _connection;
-        public DatabaseService(string hostname,string database, string username, string password,int port, bool autoConnect=true)
+        public DatabaseService(string hostname, string database, string username, string password, int port, bool autoConnect = true)
         {
             _hostname = hostname;
             _username = username;
@@ -26,7 +27,7 @@ namespace X_RayPalette.Services
         {
             if (_isConnected)
                 return true;
-     
+
             string connectionsString = $"server={_hostname};user={_username};database={_database};port={_port.ToString()};password={_password};";
             _connection = new MySqlConnection(connectionsString);
             try
@@ -59,7 +60,7 @@ namespace X_RayPalette.Services
             }
             return _isConnected;
         }
-        
+
         public bool IsConnected
         {
             get
@@ -83,13 +84,35 @@ namespace X_RayPalette.Services
 
             return cmd.ExecuteReader();
         }
+        public string GetStringFromExecSql(string sql, params object[] parameters)
+        {
+            var reader = ExecuteFromSql(sql, parameters);
+            string result = "";
+            if (reader.Read())
+            {
+                result = reader.GetString(0);
+            }
+            reader.Close();
+            return result;
+        }
+        public List<string> GetStringListFromExecSql(string sql, params object[] parameters)
+        {
+            var reader = ExecuteFromSql(sql, parameters);
+            List<string> result = new List<string>();
+            while (reader.Read())
+            {
+                result.Add(reader.GetString(0));
+            }
+            reader.Close();
+            return result;
+        }
         public int ExecuteNonQuery(string sql, params object[] parameters)
         {
             if (!_isConnected)
                 return -1;
 
             MySqlCommand cmd = new MySqlCommand(sql, _connection);
-            
+
 
             for (int i = 0; i < parameters.Length; i++)
             {
@@ -126,7 +149,7 @@ namespace X_RayPalette.Services
                 }
             }
         }
-        
+
         public object ExecuteScalar(string sql, params object[] parameters)
         {
             if (!_isConnected)
@@ -174,6 +197,20 @@ namespace X_RayPalette.Services
         {
             int LoggedDocId = (int)Program.dbService.ExecuteScalar("Select doctors_id from login_info where login ='" + loggedWith + "';");
             return LoggedDocId;
+        }
+        public bool IsPESELInDB(string pesel)
+        {
+            var reader = Program.dbService.ExecuteFromSql("Select PESEL from patient;");
+            while (reader.Read())
+            {
+                if (reader.GetString(0) == pesel)
+                {
+                    reader.Close();
+                    return true;
+                }
+            }
+            reader.Close();
+            return false;
         }
     }
 }

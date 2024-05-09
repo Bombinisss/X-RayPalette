@@ -6,6 +6,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using X_RayPalette.Components;
 using X_RayPalette.Helpers;
 
 namespace X_RayPalette.Views.Patient
@@ -85,19 +86,7 @@ namespace X_RayPalette.Views.Patient
             ImGui.Text("Phone: ");
             ImGui.SameLine(110);
             ImGui.PopItemWidth();
-            ImGui.PushItemWidth(50);
-            if (ImGui.BeginCombo("##phoneArea", "+" + _newPatientPhoneAreaCode.AreaCode))
-            {
-                foreach (var areaCode in InputDataHelper.PhoneAreaCodes)
-                {
-                    if (ImGui.Selectable("+" + areaCode.AreaCode + " " + areaCode.AreaName))
-                    {
-                        _newPatientPhoneAreaCode = areaCode;
-                    }
-                }
-                ImGui.EndCombo();
-            }
-            ImGui.PopItemWidth();
+            new ComboBox<PhoneAreaCode>(_newPatientPhoneAreaCode, "##phoneArea", InputDataHelper.PhoneAreaCodes).Width(50).OnSelect((x) => _newPatientPhoneAreaCode = x).Render();
             ImGui.SameLine(0);
             ImGui.PushItemWidth(150);
             ImGui.InputText("##phone##", ref _newPatientPhone, 15, ImGuiInputTextFlags.CharsDecimal);
@@ -135,13 +124,13 @@ namespace X_RayPalette.Views.Patient
             {
                 ImGui.Text("Images");
                 ImGui.Separator();
-                ImGui.Button("Upload Images"); // TODO: add file Popup and upload images
+                // TODO: add file Popup and upload images
+                new Button("Upload Images").Render();
                 ImGui.Separator();             // TODO: display uploaded images
             }
 
             if (isAdmin)
             {
-                ImGui.PushItemWidth(350);
                 List<string> _nameArray = new List<string>();
                 MySqlDataReader reader = Program.dbService.ExecuteFromSql("Select doctors_id, first_name, sur_name from doctors");
                 while (reader.Read())
@@ -150,37 +139,23 @@ namespace X_RayPalette.Views.Patient
                 }
                 _nameArray.ToArray();
                 reader.Close();
-                if (ImGui.BeginCombo("##Doctorchoose##", _tempdataDocAp))
+                new ComboBox<string>(_tempdataDocAp, "##Doctorchoose##", _nameArray).OnSelect((string val) =>
                 {
-
-                    foreach (var doc in _nameArray)
-                    {
-                        if (ImGui.Selectable(doc))
-                        {
-                            _tempdataDocAp = doc;
-                        }
-                    }
-                    ImGui.EndCombo();
-                }
-                ImGui.PopItemWidth();
+                    _tempdataDocAp = val;
+                }).Width(350).Render();
             }
             ImGui.NewLine();
-            if (ImGui.Button("Add Patient"))
+            new Button("Add Patient").OnClick(() =>
             {
                 if (isAdmin)
                 {
                     System.Console.WriteLine(_tempdataDocAp);
 
-                    MySqlDataReader reader2 = Program.dbService.ExecuteFromSql("Select PESEL from patient;");
-                    while (reader2.Read())
+                    var isPeselInDB2 = Program.dbService.IsPESELInDB(_newPatientPesel);
+                    if (isPeselInDB2)
                     {
-                        if (reader2.GetString(0) == _newPatientPesel)
-                        {
-                            _newPatientPesel = "";
-
-                        }
+                        _newPatientPesel = "";
                     }
-                    reader2.Close();
 
                     if (_newPatientName != "" && _newPatientSurname != "" && _newPatientPesel != "" && _newPatientPhone != "")
                     {
@@ -194,16 +169,11 @@ namespace X_RayPalette.Views.Patient
                     }
 
                 }
-                MySqlDataReader reader = Program.dbService.ExecuteFromSql("Select PESEL from patient;");
-                while (reader.Read())
+                var isPeselInDB = Program.dbService.IsPESELInDB(_newPatientPesel);
+                if (isPeselInDB)
                 {
-                    if (reader.GetString(0) == _newPatientPesel)
-                    {
-                        _newPatientPesel = "";
-
-                    }
+                    _newPatientPesel = "";
                 }
-                reader.Close();
 
                 if (_newPatientName != "" && _newPatientSurname != "" && _newPatientPesel != "" && _newPatientPhone != "")
                 {
@@ -214,7 +184,8 @@ namespace X_RayPalette.Views.Patient
                     "VALUES('" + _newPatientName + "','" + _newPatientSurname + "','" + _newPatientSex + "', '" + LoggedId + "', '" + _newPatientPesel + "','" + _newPatientEmail + "','" + _newPatientPhone + "','" + _newPatientCity + "','" + _newPatientStreet + "','" + _newPatientHouseNumber + "','" + _newPatientFlatNumber + "','" + _newPatientPostCode + "','" + _newPatientCountry + "');");
 
                 }
-            }
+            }).Render();
+
             OnRenderEvent();
         }
 
