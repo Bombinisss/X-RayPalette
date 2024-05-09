@@ -8,6 +8,7 @@ using X_RayPalette.Views.InfoChange;
 using X_RayPalette.Views.Patient;
 using X_RayPalette.Views.DoctorRegister;
 using X_RayPalette.Services;
+using X_RayPalette.Components;
 
 namespace X_RayPalette
 {
@@ -262,34 +263,28 @@ namespace X_RayPalette
                     {
                         DevOpen = true;
                         //to do: select or drop image here and convert to long rainbow
-                        if (ImGui.Button("Select Image"))
+                        new ImagePicker("Select Image").OnPickedValid(path =>
                         {
-                            NfdDialogResult path = Nfd.FileOpen(InputFilterHelper.NfdFilter(), "C:\\"); //path - selected image path
-                            Console.WriteLine(path.Path); //check image path
-                            if (path.Path != null)
-                            {
-                                ConvertButton = false;
-                                Path = path.Path;
-
-                                ImagePathExist = true;
-                            }
-                            if (ImagePathExist)
-                            {
-                                ImageHandler = _imageRender.Create(Path);
-                            }
-                        }
-                        if (ImGui.Button("ConvertImage"))
+                            //onpickedValid -> always valid path
+                            Console.WriteLine(path); //check image path
+                            ConvertButton = false;
+                            ImagePathExist = true;
+                            Path = path;
+                            ImageHandler = _imageRender.Create(Path);
+                        }).Render();
+                        new Button("ConvertImage").OnClick(() =>
                         {
                             if (Path != null)
                             {
                                 ConvertButton = true;
-                                Thread thread = new Thread(() => _colorConvert.Start(Path, _colorMode,_imageRenderOut));
+                                Thread thread = new Thread(() => _colorConvert.Start(Path, _colorMode, _imageRenderOut));
                                 thread.Start();
                                 ImagePathHelper.ImagesFolderPath();
                                 _imageHandlerLoading = _imageRenderLoading.Create(ImagePathHelper.ImagesFolderPath() + "\\loading.jpg");
                             }
 
-                        }
+                        }).Render();
+
                         if (ImagePathExist && Path != null)
                         {
                             ImGui.Image(this.ImageHandler, new Vector2(_imageRender.Width, _imageRender.Height));
@@ -316,9 +311,9 @@ namespace X_RayPalette
                 ImGui.Text("Password: ");
                 ImGui.SameLine(0);
                 ImGui.InputText("##passwd##", ref _password, 128, ImGuiInputTextFlags.Password);
-                if (ImGui.Button("Login")) // Admin login: Admin password: Admin12
-                {
 
+                new Button("Login").OnClick(() =>
+                {
                     if (Program.dbService.AuthUser(_username, _password))
                     {
                         if (_username == "Admin")
@@ -334,11 +329,11 @@ namespace X_RayPalette
                         _windowCopy.Height = 540;
                         _windowCopy.Width = 960;
                     }
-                    else // to do: inform user about invalid inputs
+                    else
                     {
                         Console.WriteLine("Invalid username or password.");
                     }
-                }
+                }).Render();
             }
         }
     }

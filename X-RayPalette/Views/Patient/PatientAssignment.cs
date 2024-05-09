@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using X_RayPalette.Components;
 
 namespace X_RayPalette.Views.Patient
 {
@@ -40,17 +41,10 @@ namespace X_RayPalette.Views.Patient
             }
             _nameArrayPat.ToArray();
             reader.Close();
-            if (ImGui.BeginCombo("##PatientChange##", _tempdataPatientEp))
+            new ComboBox<string>(_tempdataPatientEp,"##PatientChange##", _nameArrayPat).OnSelect((string val) =>
             {
-                foreach (var patient in _nameArrayPat)
-                {
-                    if (ImGui.Selectable(patient))
-                    {
-                        _tempdataPatientEp = patient;
-                    }
-                }
-                ImGui.EndCombo();
-            }
+                _tempdataPatientEp = val;
+            }).Render();
             ImGui.SameLine();
             ImGui.Text("assigne to");
             ImGui.SameLine();
@@ -62,30 +56,24 @@ namespace X_RayPalette.Views.Patient
             }
             _nameArrayDoc.ToArray();
             readerDoc.Close();
-            if (ImGui.BeginCombo("##DocChange##", _tempdataDocEp))
+            new ComboBox<string>(_tempdataDocEp,"##DocChange##", _nameArrayDoc).OnSelect((string val) =>
             {
-                foreach (var doc in _nameArrayDoc)
-                {
-                    if (ImGui.Selectable(doc))
-                    {
-                        _tempdataDocEp = doc;
-                    }
-                }
-                ImGui.EndCombo();
-            }
+                _tempdataDocEp = val;
+            }).Render();
             ImGui.Separator();
-            if (ImGui.Button("Change assigment"))
-            {
+            new Button("Change assigment").OnClick(
+                () =>
+                {
+                    //TODO: delete previous patient doc assigment and add to new doc
+                    string[] InfSelectedDoc = _tempdataDocEp.Split(' ');
+                    int SelectedDocId = Convert.ToInt32(InfSelectedDoc[0]);
 
-                //TODO: delete previous patient doc assigment and add to new doc
-                string[] InfSelectedDoc = _tempdataDocEp.Split(' ');
-                int SelectedDocId = Convert.ToInt32(InfSelectedDoc[0]);
+                    string[] InfSelectedPat = _tempdataPatientEp.Split(' ');
+                    string SelectedPatPesel = InfSelectedPat[0];
+                    var res = Program.dbService.ExecuteNonQuery("Update patient Set doctors_id = '" + SelectedDocId + "' where pesel='" + SelectedPatPesel + "'");
+                    Back();
+                }).Render();
 
-                string[] InfSelectedPat = _tempdataPatientEp.Split(' ');
-                string SelectedPatPesel = InfSelectedPat[0];
-                var res = Program.dbService.ExecuteNonQuery("Update patient Set doctors_id = '" + SelectedDocId + "' where pesel='" + SelectedPatPesel + "'");
-                Back();
-            }
             ImGui.PopItemWidth();
         }
     }

@@ -6,6 +6,7 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+using X_RayPalette.Components;
 using X_RayPalette.Helpers;
 
 namespace X_RayPalette.Views.DoctorRegister
@@ -76,19 +77,10 @@ namespace X_RayPalette.Views.DoctorRegister
 
             ImGui.Text("Phone: ");
             ImGui.SameLine(110);
-            ImGui.PushItemWidth(50);
-            if (ImGui.BeginCombo("##DoctorphoneArea", "+" + _newDoctorPhoneAreaCode.AreaCode))
+            new ComboBox<PhoneAreaCode>(_newDoctorPhoneAreaCode,"##DoctorphoneArea", InputDataHelper.PhoneAreaCodes).Width(50).OnSelect((x) =>
             {
-                foreach (var areaCode in InputDataHelper.PhoneAreaCodes)
-                {
-                    if (ImGui.Selectable("+" + areaCode.AreaCode + " " + areaCode.AreaName))
-                    {
-                        _newDoctorPhoneAreaCode = areaCode;
-                    }
-                }
-                ImGui.EndCombo();
-            }
-            ImGui.PopItemWidth();
+                _newDoctorPhoneAreaCode = x;
+            }).Render();
             ImGui.SameLine(0);
             ImGui.PushItemWidth(150);
             ImGui.InputText("##Doctorphone##", ref _newDoctorPhone, 15, ImGuiInputTextFlags.CharsDecimal);
@@ -117,7 +109,7 @@ namespace X_RayPalette.Views.DoctorRegister
             ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A - required field");
 
             // Register account
-            if (ImGui.Button("Register"))
+            new Button("Register").OnClick(() =>
             {
                 Back();
                 // TODO: add using
@@ -147,8 +139,7 @@ namespace X_RayPalette.Views.DoctorRegister
                        "VALUES('" + _usernameRegister + "','" + _passwdhashed + "');");
                     }
                 }
-
-            }
+            }).Render();
         }
     }
 }
