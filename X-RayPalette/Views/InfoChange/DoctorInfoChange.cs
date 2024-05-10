@@ -30,7 +30,7 @@ namespace X_RayPalette.Views.InfoChange
         private string _updatePasswordRepeat;
         private string _updateUsernameRegister;
         private string _updatePasswordRegister;
-
+        private string _selectedDocId;
         public DoctorInfoChange()
         {
             _tempdataDocCi = "Choose Doctor";
@@ -68,9 +68,7 @@ namespace X_RayPalette.Views.InfoChange
             .OnValueChange((old, n)=>
             {
                 string[] _selectedDocIdName = n.Split(' ');
-                try
-                {
-                    string _selectedDocId = _selectedDocIdName[0];
+                    _selectedDocId = _selectedDocIdName[0];
                     List<dynamic> _MainReaderList = new List<dynamic>();
                     MySqlDataReader MainReader = Program.dbService.ExecuteFromSql("Select first_name, sur_name, sex, PESEL, email, phone from doctors where doctors_id = '"+ _selectedDocId + "';");
                     while(MainReader.Read())
@@ -92,28 +90,7 @@ namespace X_RayPalette.Views.InfoChange
                     _updateDoctorPhone = Convert.ToString(data[5]);
                     _updatePasswordRepeat = "";
                     _updateUsernameRegister = "";
-                    _updatePasswordRegister = "";
-
-              
-                }
-                catch (Exception ex)
-                {
-
-                    Console.WriteLine(ex);
-                    _tempdataDocCi = "Choose Doctor";
-                    _updateDoctorName = "";
-                    _updateDoctorSurname = "";
-                    _updateDoctorSex = 1;
-                    _updateDoctorPesel = "";
-                    _updateDoctorEmail = "";
-                    _updateDoctorPhone = "";
-                    _updateDoctorPhoneAreaCode = InputDataHelper.PhoneAreaCodes.First();
-                    _updatePasswordRepeat = "";
-                    _updateUsernameRegister = "";
-                    _updatePasswordRegister = "";
-
-                }
-         
+                    _updatePasswordRegister = "";   
             }).Render();
 
 
@@ -179,21 +156,30 @@ namespace X_RayPalette.Views.InfoChange
 
                     ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A - required field");
                     ImGui.Separator();
-                
 
-                new Button("Confirm changes").OnClick(() =>
+
+            new Button("Confirm changes").OnClick(() =>
+            {
+
+                var UpdateReader = Program.dbService.ExecuteNonQuery("UPDATE `doctors` SET `first_name`= '" + _updateDoctorName + "',`sur_name`='" + _updateDoctorSurname + "',`sex`='" + _updateDoctorSex + "',`PESEL`='" + _updateDoctorPesel + "',`email`='" + _updateDoctorEmail + "',`phone`='" + _updateDoctorPhone + "' WHERE doctors_id = '" + Convert.ToString(_selectedDocId) + "';");
+                if (_updateUsernameRegister != null && _updatePasswordRegister == _updatePasswordRepeat && _updatePasswordRepeat != null)
                 {
-
-
-
-
-
-
-
-
-
-
-                }).Render();
+                    string _updatePasswdHashed = BCrypt.Net.BCrypt.EnhancedHashPassword(_updatePasswordRepeat);
+                    var UpdateLoginDataReader = Program.dbService.ExecuteNonQuery("UPDATE `login_info` SET `login`='" + _updateUsernameRegister + "',`password`='" + _updatePasswdHashed + "' WHERE `doctors_id`='" + Convert.ToString(_selectedDocId) + "';");
+                }
+                _tempdataDocCi = "Choose Doctor";
+                _updateDoctorName = "";
+                _updateDoctorSurname = "";
+                _updateDoctorSex = 1;
+                _updateDoctorPesel = "";
+                _updateDoctorEmail = "";
+                _updateDoctorPhone = "";
+                _updateDoctorPhoneAreaCode = InputDataHelper.PhoneAreaCodes.First();
+                _updatePasswordRepeat = "";
+                _updateUsernameRegister = "";
+                _updatePasswordRegister = "";
+                Back();
+            }).Render();
 
 
         }
