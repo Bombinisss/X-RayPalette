@@ -79,7 +79,7 @@ namespace X_RayPalette.Views.InfoChange
                         _MainReaderList.Add(MainReader.GetString(1));
                         _MainReaderList.Add(MainReader.GetInt32(2));
                         _MainReaderList.Add(MainReader.GetString(3));
-                        _MainReaderList.Add(MainReader.GetString(4));
+                        _MainReaderList.Add(MainReader.GetValue(4));
                         _MainReaderList.Add(MainReader.GetInt32(5));
                     }
                     MainReader.Close();
@@ -181,7 +181,19 @@ namespace X_RayPalette.Views.InfoChange
                     ImGui.Separator();
                 
 
-                new Button("Confirm changes").OnClick(Back).Render();
+                new Button("Confirm changes").OnClick(() =>
+                {
+
+
+
+
+
+
+
+
+
+
+                }).Render();
 
 
         }
