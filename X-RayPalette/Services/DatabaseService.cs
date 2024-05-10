@@ -1,6 +1,7 @@
 ﻿using Microsoft.VisualBasic;
 using MySql.Data.MySqlClient;
 using System.Dynamic;
+using System.Security.Cryptography;
 
 namespace X_RayPalette.Services
 {
@@ -104,6 +105,7 @@ namespace X_RayPalette.Services
             {
                 result.Add(reader.GetString(i));
                 i++;
+                Console.WriteLine( i);
             }
             reader.Close();
             return result;

@@ -71,19 +71,30 @@ namespace X_RayPalette.Views.InfoChange
                 try
                 {
                     string _selectedDocId = _selectedDocIdName[0];
-                    Console.WriteLine(_selectedDocId);
-                    List<string> MainReader = Program.dbService.GetStringListFromExecSql("Select first_name, sur_name, sex, PESEL, email, phone from doctors where doctors_id='" + _selectedDocId + "';");
-                    string[] _data = MainReader.ToArray();
-                    _updateDoctorName = _data[0];
-                    _updateDoctorSurname = _data[1];
-                    _updateDoctorSex = Convert.ToInt32(_data[2]);
-                    _updateDoctorPesel = _data[3];
-                    _updateDoctorEmail = _data[4];
-                    _updateDoctorPhone = _data[5];
+                    List<dynamic> _MainReaderList = new List<dynamic>();
+                    MySqlDataReader MainReader = Program.dbService.ExecuteFromSql("Select first_name, sur_name, sex, PESEL, email, phone from doctors where doctors_id = '"+ _selectedDocId + "';");
+                    while(MainReader.Read())
+                    {
+                        _MainReaderList.Add(MainReader.GetString(0));
+                        _MainReaderList.Add(MainReader.GetString(1));
+                        _MainReaderList.Add(MainReader.GetInt32(2));
+                        _MainReaderList.Add(MainReader.GetString(3));
+                        _MainReaderList.Add(MainReader.GetString(4));
+                        _MainReaderList.Add(MainReader.GetInt32(5));
+                    }
+                    MainReader.Close();
+                    dynamic[] data = _MainReaderList.ToArray();
+                    _updateDoctorName = data[0];
+                    _updateDoctorSurname = data[1];
+                    _updateDoctorSex = Convert.ToInt32(data[2]);
+                    _updateDoctorPesel = data[3];
+                    _updateDoctorEmail = data[4];
+                    _updateDoctorPhone = Convert.ToString(data[5]);
                     _updatePasswordRepeat = "";
                     _updateUsernameRegister = "";
                     _updatePasswordRegister = "";
 
+              
                 }
                 catch (Exception ex)
                 {
@@ -102,13 +113,12 @@ namespace X_RayPalette.Views.InfoChange
                     _updatePasswordRegister = "";
 
                 }
+         
             }).Render();
 
 
 
                 ImGui.Separator();
-                if (_tempdataDocCi != "Choose Doctor")
-                {
 
                     ImGui.Text("Name: ");
                     ImGui.SameLine(110);
@@ -169,7 +179,7 @@ namespace X_RayPalette.Views.InfoChange
 
                     ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A - required field");
                     ImGui.Separator();
-                }
+                
 
                 new Button("Confirm changes").OnClick(Back).Render();
 
