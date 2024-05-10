@@ -97,11 +97,13 @@ namespace X_RayPalette.Services
         }
         public List<string> GetStringListFromExecSql(string sql, params object[] parameters)
         {
+            int i = 0;
             var reader = ExecuteFromSql(sql, parameters);
             List<string> result = new List<string>();
             while (reader.Read())
             {
-                result.Add(reader.GetString(0));
+                result.Add(reader.GetString(i));
+                i++;
             }
             reader.Close();
             return result;
