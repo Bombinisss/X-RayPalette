@@ -162,7 +162,7 @@ namespace X_RayPalette.Views.InfoChange
             {
 
                 var UpdateReader = Program.dbService.ExecuteNonQuery("UPDATE `doctors` SET `first_name`= '" + _updateDoctorName + "',`sur_name`='" + _updateDoctorSurname + "',`sex`='" + _updateDoctorSex + "',`PESEL`='" + _updateDoctorPesel + "',`email`='" + _updateDoctorEmail + "',`phone`='" + _updateDoctorPhone + "' WHERE doctors_id = '" + Convert.ToString(_selectedDocId) + "';");
-                if (_updateUsernameRegister != null && _updatePasswordRegister == _updatePasswordRepeat && _updatePasswordRepeat != null)
+                if (_updateUsernameRegister != "" && _updatePasswordRegister == _updatePasswordRepeat && _updatePasswordRepeat != "")
                 {
                     string _updatePasswdHashed = BCrypt.Net.BCrypt.EnhancedHashPassword(_updatePasswordRepeat);
                     var UpdateLoginDataReader = Program.dbService.ExecuteNonQuery("UPDATE `login_info` SET `login`='" + _updateUsernameRegister + "',`password`='" + _updatePasswdHashed + "' WHERE `doctors_id`='" + Convert.ToString(_selectedDocId) + "';");
