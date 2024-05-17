@@ -77,7 +77,7 @@ namespace X_RayPalette.Views.InfoChange
             ImGui.TableSetupColumn("Postal code", ImGuiTableColumnFlags.NoHeaderWidth,1);
             ImGui.TableSetupColumn("Country", ImGuiTableColumnFlags.NoHeaderWidth,1);
             ImGui.TableHeadersRow();
-         {
+            {
             while (allReader.Read())
             {
                 _allList.Add(allReader.GetValue(0) + " " + allReader.GetValue(1) + " " + allReader.GetValue(2) + " " + allReader.GetValue(3) + " " + allReader.GetValue(4) + " " + allReader.GetValue(5) + " " + allReader.GetValue(6) + " " + allReader.GetValue(7) + " " + allReader.GetValue(8) + " " + allReader.GetValue(9) + " " + allReader.GetValue(10) + " " + allReader.GetValue(11) + " " + allReader.GetValue(12));
@@ -89,8 +89,7 @@ namespace X_RayPalette.Views.InfoChange
                         {
                             ImGui.TableSetColumnIndex(column);
                             
-                          
-
+                            ImGui.Separator();
                             if (column == 3 && Convert.ToString(allReader.GetValue(3)) == "1")
                             {
                                 ImGui.Text("Male");
@@ -101,7 +100,7 @@ namespace X_RayPalette.Views.InfoChange
                             }
                             else
                             ImGui.Text(Convert.ToString(allReader.GetValue(column)));
-
+                            ImGui.NextColumn();
                         }
                     }
             }        
