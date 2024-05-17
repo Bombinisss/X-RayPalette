@@ -3,6 +3,7 @@ using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Drawing.Text;
 using System.Formats.Asn1;
 using System.Linq;
 using System.Numerics;
@@ -31,30 +32,50 @@ namespace X_RayPalette.Views.InfoChange
 
         public override void Render(bool isAdmin)
         {
-            ImGui.Text("Search using PESEL: ");
-            ImGui.SameLine(150);
+            ImGui.Text("Search: ");
+            ImGui.SameLine(80);
             ImGui.InputText("##Search##", ref _search, 128);
             ImGui.SameLine();
             ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
-            MySqlDataReader allReader = Program.dbService.ExecuteFromSql("Select * from patient");
+            MySqlDataReader allReader;
+
+         string whatGender(string _search)
+            {
+                if (_search == "Male" || _search == "male")
+                    return "1";
+
+                if (_search =="Female" || _search =="female")
+                    return "2";
+                else return "";
+            }
+
+            if (_search == "")
+            {
+                allReader = Program.dbService.ExecuteFromSql("Select * from patient");
+            }
+            else
+            {
+                allReader = Program.dbService.ExecuteFromSql("Select * from patient where Pesel like '%" + _search + "%' or first_name like '%" + _search + "%' or Sur_name like '%" + _search + "%' or sex like '"+ whatGender(_search) +"' or doctors_id like '%" + _search + "%' or email like '%" + _search + "%' or phone like '%" + _search + "%' or city like '%" + _search + "%' or street like '%" + _search + "%' or country like '%" + _search + "%';");
+            }
 
             List<dynamic> _allList = new List<dynamic>();
             ImGui.Separator();
+            if (ImGui.BeginTable("allTable", 13))
 
-            if (ImGui.BeginTable("allTable", 13, ImGuiTableFlags))
-            ImGui.TableSetupColumn("Pesel");
-            ImGui.TableSetupColumn("Name");
-            ImGui.TableSetupColumn("Surname");
-            ImGui.TableSetupColumn("Sex");
-            ImGui.TableSetupColumn("Doctor");
-            ImGui.TableSetupColumn("Email");
-            ImGui.TableSetupColumn("Phone");
-            ImGui.TableSetupColumn("City");
-            ImGui.TableSetupColumn("Street");
-            ImGui.TableSetupColumn("House number");
-            ImGui.TableSetupColumn("Flat number");
-            ImGui.TableSetupColumn("Postal code");
-            ImGui.TableSetupColumn("Country");
+            
+            ImGui.TableSetupColumn("Pesel", ImGuiTableColumnFlags.NoHeaderWidth,3);
+            ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.NoHeaderWidth,3);
+            ImGui.TableSetupColumn("Surname", ImGuiTableColumnFlags.NoHeaderWidth, 3);
+            ImGui.TableSetupColumn("Sex", ImGuiTableColumnFlags.NoHeaderWidth, 1);
+            ImGui.TableSetupColumn("Doctor", ImGuiTableColumnFlags.NoHeaderWidth, 1);
+            ImGui.TableSetupColumn("Email", ImGuiTableColumnFlags.NoHeaderWidth, 4);
+            ImGui.TableSetupColumn("Phone", ImGuiTableColumnFlags.NoHeaderWidth, 2);
+            ImGui.TableSetupColumn("City", ImGuiTableColumnFlags.NoHeaderWidth,2);
+            ImGui.TableSetupColumn("Street", ImGuiTableColumnFlags.NoHeaderWidth,2);
+            ImGui.TableSetupColumn("House number", ImGuiTableColumnFlags.NoHeaderWidth,1);
+            ImGui.TableSetupColumn("Flat number", ImGuiTableColumnFlags.NoHeaderWidth,1);
+            ImGui.TableSetupColumn("Postal code", ImGuiTableColumnFlags.NoHeaderWidth,1);
+            ImGui.TableSetupColumn("Country", ImGuiTableColumnFlags.NoHeaderWidth,1);
             ImGui.TableHeadersRow();
          {
             while (allReader.Read())
@@ -68,6 +89,8 @@ namespace X_RayPalette.Views.InfoChange
                         {
                             ImGui.TableSetColumnIndex(column);
                             
+                          
+
                             if (column == 3 && Convert.ToString(allReader.GetValue(3)) == "1")
                             {
                                 ImGui.Text("Male");
@@ -82,9 +105,10 @@ namespace X_RayPalette.Views.InfoChange
                         }
                     }
             }        
-         }
-            ImGui.EndTable();
+         }   
             allReader.Close();  
+            ImGui.EndTable();
+
             ImGui.Separator();
             new Button("Confirm changes").OnClick(Back).Render();
         }
