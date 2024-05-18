@@ -15,19 +15,40 @@ namespace X_RayPalette.Views.InfoChange
 {
     public class PatientInfoChange : View
     {
-
         private string _tempdataPatientCi;
         private string _search;
+        List<byte[][]> allData;
+
         public PatientInfoChange()
         {
             _tempdataPatientCi = "Choose Patient";
             _search = "";
+            allData = new List<byte[][]>();
+            MySqlDataReader allReader;
+            allReader = Program.dbService.ExecuteFromSql("SELECT * FROM patient");
+            while (allReader.Read())
+            {
+                byte[][] row = new byte[13][];
+                for (int i = 0; i < 13; i++)
+                {
+                    string cellValue = allReader.GetValue(i).ToString();
+                    row[i] = new byte[256];
+                    byte[] valueBytes = Encoding.UTF8.GetBytes(cellValue);
+                    Array.Copy(valueBytes, row[i], Math.Min(valueBytes.Length, row[i].Length));
+                }
+
+                allData.Add(row);
+            }
+            
+            allReader.Close();
         }
+
         public override void Back()
         {
             _tempdataPatientCi = "Choose Patient";
             OnBackEvent();
         }
+
         int _allCount = Convert.ToInt32(Program.dbService.ExecuteScalar("Select count(PESEL) from patient"));
 
         public override void Render(bool isAdmin)
@@ -37,79 +58,103 @@ namespace X_RayPalette.Views.InfoChange
             ImGui.InputText("##Search##", ref _search, 128);
             ImGui.SameLine();
             ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
+
             MySqlDataReader allReader;
 
-         string whatGender(string _search)
+            string GetGender(string search)
             {
-                if (_search == "Male" || _search == "male")
-                    return "1";
-
-                if (_search =="Female" || _search =="female")
-                    return "2";
-                else return "";
+                return search.Equals("Male", StringComparison.OrdinalIgnoreCase) ? "1" :
+                    search.Equals("Female", StringComparison.OrdinalIgnoreCase) ? "2" : "";
             }
 
-            if (_search == "")
+            if (string.IsNullOrEmpty(_search))
             {
-                allReader = Program.dbService.ExecuteFromSql("Select * from patient");
+                allReader = Program.dbService.ExecuteFromSql("SELECT * FROM patient");
             }
             else
             {
-                allReader = Program.dbService.ExecuteFromSql("Select * from patient where Pesel like '%" + _search + "%' or first_name like '%" + _search + "%' or Sur_name like '%" + _search + "%' or sex like '"+ whatGender(_search) +"' or doctors_id like '%" + _search + "%' or email like '%" + _search + "%' or phone like '%" + _search + "%' or city like '%" + _search + "%' or street like '%" + _search + "%' or country like '%" + _search + "%';");
+                string gender = GetGender(_search);
+                string query =
+                    $"SELECT * FROM patient WHERE Pesel LIKE '%{_search}%' OR first_name LIKE '%{_search}%' OR Sur_name LIKE '%{_search}%' OR sex LIKE '{gender}' OR doctors_id LIKE '%{_search}%' OR email LIKE '%{_search}%' OR phone LIKE '%{_search}%' OR city LIKE '%{_search}%' OR street LIKE '%{_search}%' OR country LIKE '%{_search}%';";
+                allReader = Program.dbService.ExecuteFromSql(query);
             }
 
-            List<dynamic> _allList = new List<dynamic>();
-            ImGui.Separator();
-            if (ImGui.BeginTable("allTable", 13))
+            allReader.Close();
 
-            
-            ImGui.TableSetupColumn("Pesel", ImGuiTableColumnFlags.NoHeaderWidth,3);
-            ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.NoHeaderWidth,3);
-            ImGui.TableSetupColumn("Surname", ImGuiTableColumnFlags.NoHeaderWidth, 3);
+            ImGui.Separator();
+
+            if (ImGui.BeginTable("allTable", 13))
+            {
+                SetupTableColumns();
+                ImGui.TableHeadersRow();
+
+                for (int rowIndex = 0; rowIndex < allData.Count; rowIndex++)
+                {
+                    byte[][] row = allData[rowIndex];
+                    ImGui.TableNextRow();
+                    for (int columnIndex = 0; columnIndex < 13; columnIndex++)
+                    {
+                        ImGui.TableSetColumnIndex(columnIndex);
+                        ImGui.Separator();
+
+                        if (columnIndex == 3)
+                        {
+                            RenderGenderCell(row[columnIndex]);
+                        }
+                        else
+                        {
+                            string label = $"##Label{rowIndex}{columnIndex}##";
+                            if (ImGui.InputText(label, row[columnIndex], (uint)row[columnIndex].Length))
+                            {
+                                // Update cell value if it changes
+                                byte[] updatedValue =
+                                    row[columnIndex].Where(b => b != 0).ToArray(); // Remove trailing zeros
+                                Array.Copy(updatedValue, row[columnIndex], updatedValue.Length);
+                            }
+                        }
+
+                        ImGui.NextColumn();
+                    }
+                }
+
+                ImGui.EndTable();
+            }
+
+            ImGui.Separator();
+            new Button("Confirm changes").OnClick(() => SaveChanges(allData)).Render();
+        }
+
+        private void SetupTableColumns()
+        {
+            ImGui.TableSetupColumn("Pesel", ImGuiTableColumnFlags.NoHeaderWidth, 3);
+            ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.NoHeaderWidth, 3.5f);
+            ImGui.TableSetupColumn("Surname", ImGuiTableColumnFlags.NoHeaderWidth, 3.5f);
             ImGui.TableSetupColumn("Sex", ImGuiTableColumnFlags.NoHeaderWidth, 1);
             ImGui.TableSetupColumn("Doctor", ImGuiTableColumnFlags.NoHeaderWidth, 1);
-            ImGui.TableSetupColumn("Email", ImGuiTableColumnFlags.NoHeaderWidth, 4);
+            ImGui.TableSetupColumn("Email", ImGuiTableColumnFlags.NoHeaderWidth, 3.5f);
             ImGui.TableSetupColumn("Phone", ImGuiTableColumnFlags.NoHeaderWidth, 2);
-            ImGui.TableSetupColumn("City", ImGuiTableColumnFlags.NoHeaderWidth,2);
-            ImGui.TableSetupColumn("Street", ImGuiTableColumnFlags.NoHeaderWidth,2);
-            ImGui.TableSetupColumn("House number", ImGuiTableColumnFlags.NoHeaderWidth,1);
-            ImGui.TableSetupColumn("Flat number", ImGuiTableColumnFlags.NoHeaderWidth,1);
-            ImGui.TableSetupColumn("Postal code", ImGuiTableColumnFlags.NoHeaderWidth,1);
-            ImGui.TableSetupColumn("Country", ImGuiTableColumnFlags.NoHeaderWidth,1);
-            ImGui.TableHeadersRow();
-            {
-            while (allReader.Read())
-            {
-                _allList.Add(allReader.GetValue(0) + " " + allReader.GetValue(1) + " " + allReader.GetValue(2) + " " + allReader.GetValue(3) + " " + allReader.GetValue(4) + " " + allReader.GetValue(5) + " " + allReader.GetValue(6) + " " + allReader.GetValue(7) + " " + allReader.GetValue(8) + " " + allReader.GetValue(9) + " " + allReader.GetValue(10) + " " + allReader.GetValue(11) + " " + allReader.GetValue(12));
-                    for (int row = 0; row < 1; row++)
-                    {
-                        ImGui.TableNextRow();
-                        ImGui.Spacing();
-                        for (int column = 0; column < 13; column++)
-                        {
-                            ImGui.TableSetColumnIndex(column);
-                            
-                            ImGui.Separator();
-                            if (column == 3 && Convert.ToString(allReader.GetValue(3)) == "1")
-                            {
-                                ImGui.Text("Male");
-                            }
-                            else if (column == 3 && Convert.ToString(allReader.GetValue(3)) == "2")
-                            {
-                                ImGui.Text("Female");
-                            }
-                            else
-                            ImGui.Text(Convert.ToString(allReader.GetValue(column)));
-                            ImGui.NextColumn();
-                        }
-                    }
-            }        
-         }   
-            allReader.Close();  
-            ImGui.EndTable();
+            ImGui.TableSetupColumn("City", ImGuiTableColumnFlags.NoHeaderWidth, 2.5f);
+            ImGui.TableSetupColumn("Street", ImGuiTableColumnFlags.NoHeaderWidth, 2.5f);
+            ImGui.TableSetupColumn("House number", ImGuiTableColumnFlags.NoHeaderWidth, 2);
+            ImGui.TableSetupColumn("Flat number", ImGuiTableColumnFlags.NoHeaderWidth, 2);
+            ImGui.TableSetupColumn("Postal code", ImGuiTableColumnFlags.NoHeaderWidth, 2);
+            ImGui.TableSetupColumn("Country", ImGuiTableColumnFlags.NoHeaderWidth, 2);
+        }
 
-            ImGui.Separator();
-            new Button("Confirm changes").OnClick(Back).Render();
+        private void RenderGenderCell(byte[] genderValueBytes)
+        {
+            string genderValue = Encoding.UTF8.GetString(genderValueBytes).TrimEnd('\0');
+            string gender = genderValue == "1" ? "Male" : genderValue == "2" ? "Female" : string.Empty;
+            ImGui.Text(gender);
+        }
+
+        private void SaveChanges(List<byte[][]> allData)
+        {
+            foreach (var row in allData)
+            {
+                string[] rowValues = row.Select(cell => Encoding.UTF8.GetString(cell).TrimEnd('\0')).ToArray();
+                // TODO: HERE and do a refresh button
+            }
         }
     }
 }
