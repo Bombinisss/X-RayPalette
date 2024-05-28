@@ -2,6 +2,7 @@
 using MySql.Data.MySqlClient;
 using System.Numerics;
 using System.Text;
+using X_RayPalette.Helpers;
 
 namespace X_RayPalette.Views.InfoChange
 {
@@ -21,7 +22,8 @@ namespace X_RayPalette.Views.InfoChange
             _selectedPesel = "";
             allData = new List<byte[][]>();
             MySqlDataReader allReader;
-            allReader = Program.dbService.ExecuteFromSql("SELECT * FROM patient");
+            int id = Globals.LoggedDocID;
+            allReader = Program.dbService.ExecuteFromSql($"SELECT * FROM patient WHERE doctors_id LIKE '%{id}%'");
             while (allReader.Read())
             {
                 byte[][] row = new byte[13][];
@@ -64,8 +66,9 @@ namespace X_RayPalette.Views.InfoChange
             {
                 if (string.IsNullOrEmpty(_search))
                 {
-                    allReader = Program.dbService.ExecuteFromSql("SELECT * FROM patient");
-                
+                    int id = Globals.LoggedDocID;
+                    allReader = Program.dbService.ExecuteFromSql($"SELECT * FROM patient WHERE doctors_id LIKE '%{id}%'");
+                    
                     allData = new List<byte[][]>();
                     while (allReader.Read())
                     {
@@ -84,8 +87,9 @@ namespace X_RayPalette.Views.InfoChange
                 else
                 {
                     string gender = GetGender(_search);
+                    int id = Globals.LoggedDocID;
                     string query =
-                        $"SELECT * FROM patient WHERE Pesel LIKE '%{_search}%' OR first_name LIKE '%{_search}%' OR Sur_name LIKE '%{_search}%' OR sex LIKE '{gender}' OR doctors_id LIKE '%{_search}%' OR email LIKE '%{_search}%' OR phone LIKE '%{_search}%' OR city LIKE '%{_search}%' OR street LIKE '%{_search}%' OR country LIKE '%{_search}%';";
+                        $"SELECT * FROM patient WHERE Pesel LIKE '%{_search}%' OR first_name LIKE '%{_search}%' OR Sur_name LIKE '%{_search}%' OR sex LIKE '{gender}' OR doctors_id = {id} OR email LIKE '%{_search}%' OR phone LIKE '%{_search}%' OR city LIKE '%{_search}%' OR street LIKE '%{_search}%' OR country LIKE '%{_search}%';";
                     allReader = Program.dbService.ExecuteFromSql(query);
                 
                     allData = new List<byte[][]>();

@@ -8,5 +8,6 @@ namespace X_RayPalette.Helpers
     public class Globals
     {
         public static String LoggedDoc;
+        public static int LoggedDocID;
     }
 }
