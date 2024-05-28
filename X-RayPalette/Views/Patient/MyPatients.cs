@@ -10,7 +10,7 @@ namespace X_RayPalette.Views.InfoChange
         private string _tempdataPatientCi;
         private string _search;
         private string _tempSearch;
-        private int _selectedRowIndex;
+        private string _selectedPesel;
         List<byte[][]> allData;
 
         public MyPatients()
@@ -18,7 +18,7 @@ namespace X_RayPalette.Views.InfoChange
             _tempdataPatientCi = "Choose Patient";
             _search = "";
             _tempSearch = "";
-            _selectedRowIndex = 0;
+            _selectedPesel = "";
             allData = new List<byte[][]>();
             MySqlDataReader allReader;
             allReader = Program.dbService.ExecuteFromSql("SELECT * FROM patient");
@@ -138,9 +138,9 @@ namespace X_RayPalette.Views.InfoChange
                         string itemId = $"##Row{rowIndex}Col{columnIndex}##";
 
                         // Allow selecting rows
-                        if (ImGui.Selectable(itemId, _selectedRowIndex == rowIndex, ImGuiSelectableFlags.SpanAllColumns))
+                        if (ImGui.Selectable(itemId, _selectedPesel == Encoding.ASCII.GetString(row[columnIndex]), ImGuiSelectableFlags.SpanAllColumns))
                         {
-                            _selectedRowIndex = rowIndex;
+                            _selectedPesel = Encoding.ASCII.GetString(row[columnIndex]);
                             // Perform actions when a row is selected...
                         }
 
