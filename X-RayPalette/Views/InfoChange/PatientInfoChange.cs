@@ -17,12 +17,14 @@ namespace X_RayPalette.Views.InfoChange
     {
         private string _tempdataPatientCi;
         private string _search;
+        private string _tempSearch;
         List<byte[][]> allData;
 
         public PatientInfoChange()
         {
             _tempdataPatientCi = "Choose Patient";
             _search = "";
+            _tempSearch = "";
             allData = new List<byte[][]>();
             MySqlDataReader allReader;
             allReader = Program.dbService.ExecuteFromSql("SELECT * FROM patient");
@@ -56,8 +58,6 @@ namespace X_RayPalette.Views.InfoChange
             ImGui.Text("Search: ");
             ImGui.SameLine(80);
             ImGui.InputText("##Search##", ref _search, 128);
-            ImGui.SameLine();
-            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
 
             MySqlDataReader allReader;
 
@@ -67,19 +67,54 @@ namespace X_RayPalette.Views.InfoChange
                     search.Equals("Female", StringComparison.OrdinalIgnoreCase) ? "2" : "";
             }
 
-            if (string.IsNullOrEmpty(_search))
+            if (_tempSearch != _search)
             {
-                allReader = Program.dbService.ExecuteFromSql("SELECT * FROM patient");
-            }
-            else
-            {
-                string gender = GetGender(_search);
-                string query =
-                    $"SELECT * FROM patient WHERE Pesel LIKE '%{_search}%' OR first_name LIKE '%{_search}%' OR Sur_name LIKE '%{_search}%' OR sex LIKE '{gender}' OR doctors_id LIKE '%{_search}%' OR email LIKE '%{_search}%' OR phone LIKE '%{_search}%' OR city LIKE '%{_search}%' OR street LIKE '%{_search}%' OR country LIKE '%{_search}%';";
-                allReader = Program.dbService.ExecuteFromSql(query);
-            }
+                if (string.IsNullOrEmpty(_search))
+                {
+                    allReader = Program.dbService.ExecuteFromSql("SELECT * FROM patient");
+                
+                    allData = new List<byte[][]>();
+                    while (allReader.Read())
+                    {
+                        byte[][] row = new byte[13][];
+                        for (int i = 0; i < 13; i++)
+                        {
+                            string cellValue = allReader.GetValue(i).ToString();
+                            row[i] = new byte[256];
+                            byte[] valueBytes = Encoding.UTF8.GetBytes(cellValue);
+                            Array.Copy(valueBytes, row[i], Math.Min(valueBytes.Length, row[i].Length));
+                        }
 
-            allReader.Close();
+                        allData.Add(row);
+                    }
+                }
+                else
+                {
+                    string gender = GetGender(_search);
+                    string query =
+                        $"SELECT * FROM patient WHERE Pesel LIKE '%{_search}%' OR first_name LIKE '%{_search}%' OR Sur_name LIKE '%{_search}%' OR sex LIKE '{gender}' OR doctors_id LIKE '%{_search}%' OR email LIKE '%{_search}%' OR phone LIKE '%{_search}%' OR city LIKE '%{_search}%' OR street LIKE '%{_search}%' OR country LIKE '%{_search}%';";
+                    allReader = Program.dbService.ExecuteFromSql(query);
+                
+                    allData = new List<byte[][]>();
+                    while (allReader.Read())
+                    {
+                        byte[][] row = new byte[13][];
+                        for (int i = 0; i < 13; i++)
+                        {
+                            string cellValue = allReader.GetValue(i).ToString();
+                            row[i] = new byte[256];
+                            byte[] valueBytes = Encoding.UTF8.GetBytes(cellValue);
+                            Array.Copy(valueBytes, row[i], Math.Min(valueBytes.Length, row[i].Length));
+                        }
+
+                        allData.Add(row);
+                    }
+                }
+
+                allReader.Close();
+                
+                _tempSearch = _search;
+            }
 
             ImGui.Separator();
 

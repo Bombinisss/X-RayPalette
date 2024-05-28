@@ -53,6 +53,7 @@ namespace X_RayPalette
         private readonly View _infoChangeWrapper;
         private readonly View _infoChangeDoctor;
         private readonly View _infoChangePatient;
+        private readonly View _myPatients;
 
         //color conversion services + image render services
         private readonly ColorConversionService _colorConvert;
@@ -114,6 +115,7 @@ namespace X_RayPalette
             _infoChangeDoctor.OnBack += (sender, args) => { _adminChangeDoctorInfo = false; };
             _infoChangePatient = new PatientInfoChange();
             _infoChangePatient.OnBack += (sender, args) => { _adminChangePatientInfo = false; };
+            _myPatients = new MyPatients();
 
             _infoChangeWrapper = new WrapperInfoChange();
             _infoChangeWrapper.OnBack += (sender, args) =>
@@ -199,9 +201,8 @@ namespace X_RayPalette
                     {
                         if (ImGui.BeginTabItem("My Patients"))
                         {
-                            ImGui.BeginTable("Patients", 1);
-                            ImGui.EndTable();
-
+                            _myPatients.Render(true);
+                            
                             ImGui.EndTabItem();
                         }
                     }
