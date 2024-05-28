@@ -37,7 +37,18 @@ namespace X_RayPalette.Views.Patient
             MySqlDataReader reader = Program.dbService.ExecuteFromSql("Select pesel, first_name, sur_name from patient");
             while (reader.Read())
             {
-                _nameArrayPat.Add(reader.GetInt32(0) + " " + reader.GetString(1) + " " + reader.GetString(2));
+                try
+                {
+                    string id = reader.GetString(0);
+                    string firstName = reader.GetString(1);
+                    string lastName = reader.GetString(2);
+                    
+                    _nameArrayPat.Add(id + " " + firstName + " " + lastName);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"An error occurred: {ex.Message}");
+                }
             }
             _nameArrayPat.ToArray();
             reader.Close();
