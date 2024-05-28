@@ -118,7 +118,7 @@ namespace X_RayPalette.Views.InfoChange
 
             ImGui.Separator();
 
-            if (ImGui.BeginTable("allTable", 13))
+            if (ImGui.BeginTable("allTable", 13, ImGuiTableFlags.Resizable))
             {
                 SetupTableColumns();
                 ImGui.TableHeadersRow();
@@ -139,6 +139,7 @@ namespace X_RayPalette.Views.InfoChange
                         else
                         {
                             string label = $"##Label{rowIndex}{columnIndex}##";
+                            ImGui.PushItemWidth(ImGui.GetContentRegionAvail().X);
                             if (ImGui.InputText(label, row[columnIndex], (uint)row[columnIndex].Length))
                             {
                                 // Update cell value if it changes

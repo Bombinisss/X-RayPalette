@@ -101,7 +101,7 @@ namespace X_RayPalette.Views.InfoChange
 
             ImGui.Separator();
 
-            if (ImGui.BeginTable("allTable", 2))
+            if (ImGui.BeginTable("allTable", 2, ImGuiTableFlags.Resizable))
             {
                 SetupTableColumns();
                 ImGui.TableHeadersRow();
