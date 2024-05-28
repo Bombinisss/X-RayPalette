@@ -9,12 +9,16 @@ namespace X_RayPalette.Views.InfoChange
     {
         private string _tempdataPatientCi;
         private string _search;
+        private string _tempSearch;
+        private int _selectedRowIndex;
         List<byte[][]> allData;
 
         public MyPatients()
         {
             _tempdataPatientCi = "Choose Patient";
             _search = "";
+            _tempSearch = "";
+            _selectedRowIndex = 0;
             allData = new List<byte[][]>();
             MySqlDataReader allReader;
             allReader = Program.dbService.ExecuteFromSql("SELECT * FROM patient");
@@ -56,48 +60,54 @@ namespace X_RayPalette.Views.InfoChange
                     search.Equals("Female", StringComparison.OrdinalIgnoreCase) ? "2" : "";
             }
 
-            if (string.IsNullOrEmpty(_search))
+            if (_tempSearch != _search)
             {
-                allReader = Program.dbService.ExecuteFromSql("SELECT * FROM patient");
+                if (string.IsNullOrEmpty(_search))
+                {
+                    allReader = Program.dbService.ExecuteFromSql("SELECT * FROM patient");
                 
-                allData = new List<byte[][]>();
-                while (allReader.Read())
-                {
-                    byte[][] row = new byte[13][];
-                    for (int i = 0; i < 13; i++)
+                    allData = new List<byte[][]>();
+                    while (allReader.Read())
                     {
-                        string cellValue = allReader.GetValue(i).ToString();
-                        row[i] = new byte[256];
-                        byte[] valueBytes = Encoding.UTF8.GetBytes(cellValue);
-                        Array.Copy(valueBytes, row[i], Math.Min(valueBytes.Length, row[i].Length));
-                    }
+                        byte[][] row = new byte[13][];
+                        for (int i = 0; i < 13; i++)
+                        {
+                            string cellValue = allReader.GetValue(i).ToString();
+                            row[i] = new byte[256];
+                            byte[] valueBytes = Encoding.UTF8.GetBytes(cellValue);
+                            Array.Copy(valueBytes, row[i], Math.Min(valueBytes.Length, row[i].Length));
+                        }
 
-                    allData.Add(row);
+                        allData.Add(row);
+                    }
                 }
-            }
-            else
-            {
-                string gender = GetGender(_search);
-                string query =
-                    $"SELECT * FROM patient WHERE Pesel LIKE '%{_search}%' OR first_name LIKE '%{_search}%' OR Sur_name LIKE '%{_search}%' OR sex LIKE '{gender}' OR doctors_id LIKE '%{_search}%' OR email LIKE '%{_search}%' OR phone LIKE '%{_search}%' OR city LIKE '%{_search}%' OR street LIKE '%{_search}%' OR country LIKE '%{_search}%';";
-                allReader = Program.dbService.ExecuteFromSql(query);
-                allData = new List<byte[][]>();
-                while (allReader.Read())
+                else
                 {
-                    byte[][] row = new byte[13][];
-                    for (int i = 0; i < 13; i++)
+                    string gender = GetGender(_search);
+                    string query =
+                        $"SELECT * FROM patient WHERE Pesel LIKE '%{_search}%' OR first_name LIKE '%{_search}%' OR Sur_name LIKE '%{_search}%' OR sex LIKE '{gender}' OR doctors_id LIKE '%{_search}%' OR email LIKE '%{_search}%' OR phone LIKE '%{_search}%' OR city LIKE '%{_search}%' OR street LIKE '%{_search}%' OR country LIKE '%{_search}%';";
+                    allReader = Program.dbService.ExecuteFromSql(query);
+                
+                    allData = new List<byte[][]>();
+                    while (allReader.Read())
                     {
-                        string cellValue = allReader.GetValue(i).ToString();
-                        row[i] = new byte[256];
-                        byte[] valueBytes = Encoding.UTF8.GetBytes(cellValue);
-                        Array.Copy(valueBytes, row[i], Math.Min(valueBytes.Length, row[i].Length));
+                        byte[][] row = new byte[13][];
+                        for (int i = 0; i < 13; i++)
+                        {
+                            string cellValue = allReader.GetValue(i).ToString();
+                            row[i] = new byte[256];
+                            byte[] valueBytes = Encoding.UTF8.GetBytes(cellValue);
+                            Array.Copy(valueBytes, row[i], Math.Min(valueBytes.Length, row[i].Length));
+                        }
+
+                        allData.Add(row);
                     }
-
-                    allData.Add(row);
                 }
-            }
 
-            allReader.Close();
+                allReader.Close();
+                
+                _tempSearch = _search;
+            }
 
             ImGui.Separator();
 
@@ -109,26 +119,42 @@ namespace X_RayPalette.Views.InfoChange
                 for (int rowIndex = 0; rowIndex < allData.Count; rowIndex++)
                 {
                     byte[][] row = allData[rowIndex];
+
+                    // Begin a new row
                     ImGui.TableNextRow();
+
                     for (int columnIndex = 0; columnIndex < 2; columnIndex++)
                     {
                         ImGui.TableSetColumnIndex(columnIndex);
+
+                        // Display table data
+                        string result = Encoding.ASCII.GetString(row[columnIndex + 1]);
+
+                        // Position the selectable area on top of the text
+                        ImGui.SetCursorPosX(ImGui.GetCursorPosX() + 10); // Adjust X position if needed
+                        ImGui.SetCursorPosY(ImGui.GetCursorPosY() + 5); // Adjust Y position if needed
+
+                        // Unique ID for each selectable item
+                        string itemId = $"##Row{rowIndex}Col{columnIndex}##";
+
+                        // Allow selecting rows
+                        if (ImGui.Selectable(itemId, _selectedRowIndex == rowIndex, ImGuiSelectableFlags.SpanAllColumns))
+                        {
+                            _selectedRowIndex = rowIndex;
+                            // Perform actions when a row is selected...
+                        }
+
+                        // Display text
+                        ImGui.SameLine();
+                        ImGui.Text(result);
                         ImGui.Separator();
                         
-                        byte[] rowData = row[columnIndex+1];
-                            
-                        string result = Encoding.ASCII.GetString(rowData);
-                            
-                        ImGui.Text(result);
-
                         ImGui.NextColumn();
                     }
                 }
 
                 ImGui.EndTable();
             }
-
-            ImGui.Separator();
         }
 
         private void SetupTableColumns()
