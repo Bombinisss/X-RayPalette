@@ -153,8 +153,54 @@ namespace X_RayPalette.Views.InfoChange
             foreach (var row in allData)
             {
                 string[] rowValues = row.Select(cell => Encoding.UTF8.GetString(cell).TrimEnd('\0')).ToArray();
-                // TODO: HERE and do a refresh button
+
+                // Construct the SQL UPDATE statement using the values from the row
+                string updateQuery = $@"
+            UPDATE patient 
+            SET first_name = '{rowValues[1]}',
+                sur_name = '{rowValues[2]}',
+                sex = '{rowValues[3]}',
+                doctors_id = '{rowValues[4]}',
+                email = '{rowValues[5]}',
+                phone = '{rowValues[6]}',
+                City = '{rowValues[7]}',
+                Street = '{rowValues[8]}',
+                House_number = '{rowValues[9]}',
+                Flat_number = '{rowValues[10]}',
+                Post_code = '{rowValues[11]}',
+                Country = '{rowValues[12]}'
+            WHERE pesel = '{rowValues[0]}';
+        ";
+
+                try
+                {
+                    // Execute the update query
+                    Program.dbService.ExecuteNonQuery(updateQuery);
+                }
+                catch (MySqlException ex)
+                {
+                    // Log the exception or display an error message
+                    Console.WriteLine($"Error updating patient data for PESEL {rowValues[0]}: {ex.Message}");
+                }
             }
+
+            // Clear and reload the data from the database after saving changes
+            allData.Clear();
+            MySqlDataReader allReader = Program.dbService.ExecuteFromSql("SELECT * FROM patient");
+            while (allReader.Read())
+            {
+                byte[][] row = new byte[13][];
+                for (int i = 0; i < 13; i++)
+                {
+                    string cellValue = allReader.GetValue(i).ToString();
+                    row[i] = new byte[256];
+                    byte[] valueBytes = Encoding.UTF8.GetBytes(cellValue);
+                    Array.Copy(valueBytes, row[i], Math.Min(valueBytes.Length, row[i].Length));
+                }
+
+                allData.Add(row);
+            }
+            allReader.Close();
         }
     }
 }
