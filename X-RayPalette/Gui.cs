@@ -310,11 +310,34 @@ namespace X_RayPalette
                 string _invalidPassMsg = "Invalid username or password.";
                
                 new TextInput(_username, "##username##").OnInput(v => _username = v).Title("Username: ", 0).Render();
-                new TextInput(_password, "##password##").InputType(ImGuiInputTextFlags.Password).Title("Password: ", 0).OnInput(v => _password = v).OnInputChanged((v, x) =>
+                if (new TextInput(_password, "##password##").InputType(ImGuiInputTextFlags.Password | ImGuiInputTextFlags.EnterReturnsTrue)
+                    .Title("Password: ", 0).OnInput(v => _password = v).OnInputChanged((v, x) =>
+                    {
+                        //clear after other password typed
+                        _invalidPass = false;
+                    }).Render())
                 {
-                    //clear after other password typed
-                    _invalidPass = false;
-                }).Render();
+                    if (Program.dbService.AuthUser(_username, _password))
+                    {
+                        if (_username == "Admin")
+                        {
+                            _adminLoggedIn = true;
+                        }
+                        else
+                        {
+                            _loggedIn = true;
+                        }
+                        Globals.LoggedDoc = _username;
+                        _flags |= ImGuiWindowFlags.MenuBar;
+                        _windowCopy.Height = 540;
+                        _windowCopy.Width = 960;
+                    }
+                    else
+                    {
+                        _invalidPass = true;
+                        Console.WriteLine("Invalid username or password.");
+                    }
+                }
                 if (_invalidPass)
                 {
                     ImGui.NewLine();
