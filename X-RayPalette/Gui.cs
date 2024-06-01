@@ -43,6 +43,7 @@ namespace X_RayPalette
 
         private string _username;
         private string _password;
+        private bool _passwordNotShown;
 
         private readonly View _addPatientView;
         private readonly View _patientAssigment;
@@ -87,6 +88,7 @@ namespace X_RayPalette
 
             _username = "";
             _password = "";
+            _passwordNotShown = true;
 
             //config for patients view
             _addPatientView = new PatientAdd();
@@ -308,9 +310,15 @@ namespace X_RayPalette
             else
             {
                 string _invalidPassMsg = "Invalid username or password.";
-               
+                ImGuiInputTextFlags flags = ImGuiInputTextFlags.EnterReturnsTrue;
+                if(_passwordNotShown) flags |= ImGuiInputTextFlags.Password;
+
+                ImGui.SetCursorPosX((ImGui.GetWindowSize().X - ImGui.CalcTextSize("Please Log In").X) * 0.5f);
+                ImGui.Text("Please Log In");
+                ImGui.NewLine();
+                
                 new TextInput(_username, "##username##").OnInput(v => _username = v).Title("Username: ", 0).Render();
-                if (new TextInput(_password, "##password##").InputType(ImGuiInputTextFlags.Password | ImGuiInputTextFlags.EnterReturnsTrue)
+                if (new TextInput(_password, "##password##").InputType(flags)
                     .Title("Password: ", 0).OnInput(v => _password = v).OnInputChanged((v, x) =>
                     {
                         //clear after other password typed
@@ -338,6 +346,13 @@ namespace X_RayPalette
                         Console.WriteLine("Invalid username or password.");
                     }
                 }
+                ImGui.SameLine();
+                new Button("*").OnClick(() =>
+                {
+                    _passwordNotShown =! _passwordNotShown;
+                }).Render();
+                if(ImGui.IsItemHovered()){ImGui.SetTooltip("Show Password");};
+
                 if (_invalidPass)
                 {
                     ImGui.NewLine();
