@@ -1,6 +1,7 @@
 ﻿using ImGuiNET;
 using MySql.Data.MySqlClient;
 using System.Numerics;
+using System.Reflection;
 using System.Text;
 using X_RayPalette.Helpers;
 
@@ -12,6 +13,7 @@ namespace X_RayPalette.Views.InfoChange
         private string _search;
         private string _tempSearch;
         private string _selectedPesel;
+        byte[][] _selectedPatient = new byte[13][];
         List<byte[][]> allData;
 
         public MyPatients()
@@ -50,6 +52,9 @@ namespace X_RayPalette.Views.InfoChange
 
         public override void Render(bool isAdmin)
         {
+            var windowSize= ImGui.GetContentRegionAvail();
+
+            ImGui.BeginChild("v_list", new Vector2(windowSize.X * 0.4f -4, 0));
             ImGui.Text("Search: ");
             ImGui.SameLine(80);
             ImGui.InputText("##Search##", ref _search, 128);
@@ -144,7 +149,24 @@ namespace X_RayPalette.Views.InfoChange
                         // Allow selecting rows
                         if (ImGui.Selectable(itemId, _selectedPesel == Encoding.ASCII.GetString(row[columnIndex]), ImGuiSelectableFlags.SpanAllColumns))
                         {
-                            _selectedPesel = Encoding.ASCII.GetString(row[columnIndex]);
+                            _selectedPesel = Encoding.ASCII.GetString(row[columnIndex]).TrimEnd('\0');
+
+                            string query = $"SELECT * FROM patient WHERE Pesel = '{_selectedPesel.ToString()}'";
+                            allReader = Program.dbService.ExecuteFromSql(query);
+
+                           
+                            while (allReader.Read())
+                            {
+                               
+                                for (int i = 0; i < 13; i++)
+                                {
+                                    string cellValue = allReader.GetValue(i).ToString();
+                                    _selectedPatient[i] = new byte[256];
+                                    byte[] valueBytes = Encoding.UTF8.GetBytes(cellValue);
+                                    Array.Copy(valueBytes, _selectedPatient[i], Math.Min(valueBytes.Length, _selectedPatient[i].Length));
+                                }
+                            }
+                            allReader.Close();
                             // Perform actions when a row is selected...
                         }
 
@@ -159,6 +181,46 @@ namespace X_RayPalette.Views.InfoChange
 
                 ImGui.EndTable();
             }
+            
+            ImGui.EndChild();
+            ImGui.SameLine();
+            // view fto selected patient
+            ImGui.BeginChild("v_view", new Vector2(windowSize.X*0.6f -4, 0));
+            if (_selectedPesel != null&& _selectedPesel.Length> 0  && _selectedPatient !=null)
+            {
+                ImGui.Text("Selected Patient");
+                ImGui.NewLine();
+                ImGui.Separator();
+                ImGui.Text("Name: " + Encoding.ASCII.GetString(_selectedPatient[1]));
+                ImGui.Text("Surname: " + Encoding.ASCII.GetString(_selectedPatient[2]));
+                ImGui.NewLine();
+                ImGui.Text("Sex: " +( Encoding.ASCII.GetString(_selectedPatient[3]).Trim('\0')=="1" ? "Male" : "Female"));
+                ImGui.Text("Pesel: " + Encoding.ASCII.GetString(_selectedPatient[0]));
+                ImGui.Separator();
+
+                ImGui.NewLine();
+                ImGui.Text("Contact");
+                ImGui.Separator();
+                ImGui.Text("Email: " + Encoding.ASCII.GetString(_selectedPatient[5]));
+                ImGui.Text("Phone: " + Encoding.ASCII.GetString(_selectedPatient[6]));
+                ImGui.Separator();
+                ImGui.NewLine();
+                ImGui.Text("Address");
+                ImGui.Separator();
+                ImGui.Text("City: " + Encoding.ASCII.GetString(_selectedPatient[7]));
+                ImGui.Text("Street: " + Encoding.ASCII.GetString(_selectedPatient[8]));
+                ImGui.Text("House number: " + Encoding.ASCII.GetString(_selectedPatient[9]));
+                ImGui.Text("Flat number: " + Encoding.ASCII.GetString(_selectedPatient[10]));
+                ImGui.Text("Postal code: " + Encoding.ASCII.GetString(_selectedPatient[11]));
+                ImGui.Text("Country: " + Encoding.ASCII.GetString(_selectedPatient[12]));
+                ImGui.Separator();
+            }
+            else
+            {
+                ImGui.Text("Choose Patient");
+                
+            }
+            ImGui.EndChild();
         }
 
         private void SetupTableColumns()
