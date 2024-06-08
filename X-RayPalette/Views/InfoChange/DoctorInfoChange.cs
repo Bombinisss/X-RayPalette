@@ -118,7 +118,7 @@ namespace X_RayPalette.Views.InfoChange
 
                     ImGui.Text("PESEL: ");
                     ImGui.SameLine(110);
-                    ImGui.InputText("##Doctorpesel##", ref _updateDoctorPesel, 11);
+                    ImGui.InputText("##Doctorpesel##", ref _updateDoctorPesel, 11,ImGuiInputTextFlags.CharsDecimal);
                     ImGui.SameLine();
                     ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
 

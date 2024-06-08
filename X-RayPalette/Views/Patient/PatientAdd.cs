@@ -65,7 +65,7 @@ namespace X_RayPalette.Views.Patient
             ImGui.SameLine(200);
             ImGui.RadioButton("Woman", ref _newPatientSex, 2);
 
-            new TextInput(_newPatientPesel, "##pesel##").MaxLength(11).IsRequired().Width(208).Title("PESEL:", 110).OnInput((v) => _newPatientPesel = v).Render();
+            new TextInput(_newPatientPesel, "##pesel##").MaxLength(11).IsRequired().Width(208).InputType(ImGuiInputTextFlags.CharsDecimal).Title("PESEL:", 110).OnInput((v) => _newPatientPesel = v).Render();
             new TextInput(_newPatientEmail, "##emailadress##").Width(208).Title("E-mail:", 110).OnInput((v) => _newPatientEmail = v).Render();
 
             ImGui.Text("Phone: ");

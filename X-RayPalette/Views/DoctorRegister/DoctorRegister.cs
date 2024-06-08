@@ -1,11 +1,6 @@
 ﻿using ImGuiNET;
 using MySql.Data.MySqlClient;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 using X_RayPalette.Components;
 using X_RayPalette.Helpers;
 
@@ -67,7 +62,7 @@ namespace X_RayPalette.Views.DoctorRegister
 
             ImGui.Text("PESEL: ");
             ImGui.SameLine(110);
-            ImGui.InputText("##Doctorpesel##", ref _newDoctorPesel, 11);
+            ImGui.InputText("##Doctorpesel##", ref _newDoctorPesel, 11,ImGuiInputTextFlags.CharsDecimal);
             ImGui.SameLine();
             ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
 

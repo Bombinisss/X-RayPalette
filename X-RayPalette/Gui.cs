@@ -1,7 +1,6 @@
 ﻿using System.Numerics;
 using ImGuiNET;
 using Veldrid.Sdl2;
-using NativeFileDialogExtendedSharp;
 using X_RayPalette.Views;
 using X_RayPalette.Helpers;
 using X_RayPalette.Views.InfoChange;
@@ -59,8 +58,10 @@ namespace X_RayPalette
         //color conversion services + image render services
         private readonly ColorConversionService _colorConvert;
         private readonly ImageRenderService _imageRender;
+        public Vector2 ImgSize;
         private readonly ImageRenderService _imageRenderOut;
         private readonly ImageRenderService _imageRenderLoading;
+        public bool PathError;
 
         public Gui(Sdl2Window windowCopy)
         {
@@ -70,6 +71,7 @@ namespace X_RayPalette
             _imageRender = new ImageRenderService();
             _imageRenderOut = new ImageRenderService();
             _imageRenderLoading = new ImageRenderService();
+            PathError = false;
 
             ImagePathExist = false;
             ConvertButton = false;
@@ -274,12 +276,27 @@ namespace X_RayPalette
                             Console.WriteLine(path); //check image path
                             ConvertButton = false;
                             ImagePathExist = true;
+                            PathError = false;
                             Path = path;
-                            ImageHandler = _imageRender.Create(Path);
+                            string extension = Path.Substring(Path.Length - 3).ToLower();
+                            if (extension != "jpg" && extension != "png" && extension != "bmp")
+                            {
+                                PathError = true;
+                            }
+                            else
+                            {
+                                ImageHandler = _imageRender.Create(Path);
+                                ImgSize = new (_imageRender.Width, _imageRender.Height);
+                            }
+                            
                         }).Render();
+                        if(PathError)
+                        {
+                            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "Niepoprawny format pliku");
+                        }
                         new Button("ConvertImage").OnClick(() =>
                         {
-                            if (Path != null)
+                            if (Path != null && !PathError)
                             {
                                 ConvertButton = true;
                                 Thread thread = new Thread(() => _colorConvert.Start(Path, _colorMode, _imageRenderOut));
@@ -290,9 +307,9 @@ namespace X_RayPalette
 
                         }).Render();
 
-                        if (ImagePathExist && Path != null)
+                        if (ImagePathExist && Path != null && !PathError)
                         {
-                            ImGui.Image(this.ImageHandler, new Vector2(_imageRender.Width, _imageRender.Height));
+                            ImGui.Image(this.ImageHandler, ImgSize);
 
                             if (ConvertButton && _colorConvert.IsProcessing)
                             {
