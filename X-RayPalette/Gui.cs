@@ -292,7 +292,7 @@ namespace X_RayPalette
                         }).Render();
                         if(PathError)
                         {
-                            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "Niepoprawny format pliku");
+                            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "Invalid file format");
                         }
                         new Button("ConvertImage").OnClick(() =>
                         {
