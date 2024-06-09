@@ -13,13 +13,13 @@ namespace X_RayPalette.Services
     public class ColorConversionService
     {
         public bool IsProcessing;
-        public void Start(string inputPath, int mode, ImageRenderService imageRenderService)
+        public IntPtr Start(string inputPath, int mode, ImageRenderService imageRenderService)
         {
             IsProcessing = false;
-            ProccessImage(inputPath, ImagePathHelper.ImagesFolderPath() + "\\output.png", mode, imageRenderService);
+            return ProccessImage(inputPath, ImagePathHelper.ImagesFolderPath() + "\\output.png", mode, imageRenderService);
         }
 
-        void ProccessImage(string inputPath, string outputPath, int mode, ImageRenderService service)
+        IntPtr ProccessImage(string inputPath, string outputPath, int mode, ImageRenderService service)
         {
             using (Bitmap inputBitmap = new Bitmap(inputPath))
             {
@@ -38,8 +38,9 @@ namespace X_RayPalette.Services
                     }
                 }
                 outputBitmap.Save(outputPath, ImageFormat.Png);
-                Gui.ImageHandlerOut = service.Create(ImagePathHelper.ImagesFolderPath() + "\\output.png");
+                
                 IsProcessing = true;
+                return service.Create(ImagePathHelper.ImagesFolderPath() + "\\output.png");
             }
         }
     }
