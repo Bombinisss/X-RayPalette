@@ -309,15 +309,15 @@ namespace X_RayPalette
 
                         if (ImagePathExist && Path != null && !PathError)
                         {
-                            ImGui.Image(this.ImageHandler, ImgSize);
+                            ImGui.Image(this.ImageHandler, ImageResizer.ResizeImage(ImgSize,700,450));
 
                             if (ConvertButton && _colorConvert.IsProcessing)
                             {
-                                ImGui.Image(ImageHandlerOut, new Vector2(_imageRenderOut.Width, _imageRenderOut.Height));
+                                ImGui.Image(ImageHandlerOut, ImageResizer.ResizeImage(new Vector2(_imageRenderOut.Width, _imageRenderOut.Height),700,450));
                             }
                             else if (ConvertButton)
                             {
-                                ImGui.Image(this._imageHandlerLoading, new Vector2(_imageRenderLoading.Width, _imageRenderLoading.Height));
+                                ImGui.Image(this._imageHandlerLoading, ImageResizer.ResizeImage(new Vector2(_imageRenderLoading.Width, _imageRenderLoading.Height),100,100));
                             }
                         }
                         ImGui.EndTabItem();
