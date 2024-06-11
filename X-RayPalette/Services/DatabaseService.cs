@@ -2,6 +2,7 @@
 using MySql.Data.MySqlClient;
 using System.Dynamic;
 using System.Security.Cryptography;
+using X_RayPalette.Helpers;
 
 namespace X_RayPalette.Services
 {
@@ -191,6 +192,9 @@ namespace X_RayPalette.Services
                     {
                         var res = reader.GetString(0);
                         reader.Close();
+                        Globals.LoggedDoc = login;
+                        Globals.LoggedDocID = Program.dbService.docNametoId(Globals.LoggedDoc);
+                        Console.WriteLine(Globals.LoggedDocID);
                         return true;
                     }
                 }

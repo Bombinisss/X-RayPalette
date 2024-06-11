@@ -20,27 +20,9 @@ namespace X_RayPalette.Views.InfoChange
         {
             _tempdataPatientCi = "Choose Patient";
             _search = "";
-            _tempSearch = "";
+            _tempSearch = " ";
             _selectedPesel = "";
             allData = new List<byte[][]>();
-            MySqlDataReader allReader;
-            int id = Globals.LoggedDocID;
-            allReader = Program.dbService.ExecuteFromSql($"SELECT * FROM patient WHERE doctors_id LIKE '%{id}%'");
-            while (allReader.Read())
-            {
-                byte[][] row = new byte[13][];
-                for (int i = 0; i < 13; i++)
-                {
-                    string cellValue = allReader.GetValue(i).ToString();
-                    row[i] = new byte[256];
-                    byte[] valueBytes = Encoding.UTF8.GetBytes(cellValue);
-                    Array.Copy(valueBytes, row[i], Math.Min(valueBytes.Length, row[i].Length));
-                }
-
-                allData.Add(row);
-            }
-            
-            allReader.Close();
         }
 
         public override void Back()

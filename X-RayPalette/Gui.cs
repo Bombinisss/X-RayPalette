@@ -352,7 +352,6 @@ namespace X_RayPalette
                         {
                             _loggedIn = true;
                         }
-                        Globals.LoggedDoc = _username;
                         _flags |= ImGuiWindowFlags.MenuBar;
                         _windowCopy.Height = 540;
                         _windowCopy.Width = 960;
