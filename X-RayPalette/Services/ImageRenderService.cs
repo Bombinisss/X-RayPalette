@@ -39,5 +39,29 @@ namespace X_RayPalette.Services
             Dimg.Dispose();
             return _imgPtr;
         }
+        public IntPtr Create(byte[] data)
+        {
+            //if (Dimg != null)
+            //{
+            //    Program.Renderer.RemoveImGuiBinding(Dimg);
+            //    Dimg.Dispose();
+            //    Dimg = null;
+            //    _imgPtr = IntPtr.Zero;
+            //    GC.Collect();
+            //    GC.WaitForPendingFinalizers();
+
+            //}
+            var ms = new System.IO.MemoryStream(data);
+            var img = new ImageSharpTexture(ms);
+            Dimg = img.CreateDeviceTexture(Program.Gd, Program.Gd.ResourceFactory);
+            img = null;
+            Width = Dimg.Width;
+            Height = Dimg.Height;
+            _imgPtr = Program.Renderer.GetOrCreateImGuiBinding(Program.Gd.ResourceFactory, Dimg); //saves file - returns the intPtr need for Imgui.Image()
+            GC.Collect();
+            GC.WaitForPendingFinalizers();
+            Dimg.Dispose();
+            return _imgPtr;
+        }
     }
 }

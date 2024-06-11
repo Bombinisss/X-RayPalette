@@ -2,6 +2,8 @@
 using Microsoft.VisualBasic;
 using MySql.Data.MySqlClient;
 using NativeFileDialogExtendedSharp;
+using Org.BouncyCastle.Utilities;
+using System.Drawing;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
@@ -236,21 +238,26 @@ namespace X_RayPalette.Views.InfoChange
 
                         AddImage(_selectedPesel, base64, fileName);
                         FetchImages(_selectedPesel);
-
-
-                        ImageHandler = _imageRender.Create(ImgPath);
-                        ImgSize = new(_imageRender.Width, _imageRender.Height);
                     }
 
                 }).Render();
                 ImGui.Separator();
                 for (int i=0;i<_selectedPatientImages.Count; i++)
                 {
+                    ImGui.PushID(i);
                     var img = _selectedPatientImages[i];
                     var id = img[0];
                     var name = img[3];
                     var content = img[2];
-                    var contentFrombase64 = Convert.FromBase64String(content);
+                    var bytes = Convert.FromBase64String(content);
+                    var imagePrt =img[4];
+                   
+                    //convert to bitmap
+                    Bitmap bitmap = new Bitmap(new MemoryStream(bytes));
+                    var with = bitmap.Width;
+                    var height = bitmap.Height;
+                    ImGui.Image((IntPtr.Parse(imagePrt)), ImageResizer.ResizeImageToHeight(new Vector2(with,height),50));
+                    ImGui.SameLine();   
 
                     ImGui.Text(name);
                     ImGui.SameLine();
@@ -269,6 +276,8 @@ namespace X_RayPalette.Views.InfoChange
                         DeleteImage(_selectedPesel, int.Parse(id));
                         FetchImages(_selectedPesel);
                     }).Render();
+                    ImGui.NewLine();
+                    ImGui.PopID();
                 }
             }
             else
@@ -291,13 +300,20 @@ namespace X_RayPalette.Views.InfoChange
             var reader = Program.dbService.ExecuteFromSql(query);
             while (reader.Read())
             {
-                string[] row = new string[4];
-                for (int i = 0; i < 4; i++)
+                string[] row = new string[5];
+                for (int i = 0; i < 5; i++)
                 {
                     if (i == 2)
                     {
                         row[i] = Encoding.ASCII.GetString(reader.GetValue(i) as byte[]);
                         continue;
+                    }else
+                    if(i==4)
+                    {
+                        var content = row[2];
+                        var bytes = Convert.FromBase64String(content);
+                        var imgRender = _imageRender.Create(bytes);
+                        row[i] = imgRender.ToString();
                     }
                     else
                     {

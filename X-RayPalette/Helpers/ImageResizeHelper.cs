@@ -34,4 +34,24 @@ public class ImageResizer
         // Return the new size as a Vector2
         return new Vector2(newWidth, newHeight);
     }
+    public static Vector2 ResizeImageToHeight(Vector2 originalSize, float desiredHeight)
+    {
+        // Original dimensions
+        float originalWidth = originalSize.X;
+        float originalHeight = originalSize.Y;
+
+        // Calculate the aspect ratio
+        float aspectRatio = originalWidth / originalHeight;
+
+        // Initialize new dimensions
+        float newWidth;
+        float newHeight;
+
+        // Constrain by height
+        newWidth = desiredHeight * aspectRatio;
+        newHeight = desiredHeight;
+
+        // Return the new size as a Vector2
+        return new Vector2(newWidth, newHeight);
+    }
 }
