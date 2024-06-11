@@ -1,5 +1,6 @@
 ﻿using System.Numerics;
 using ImGuiNET;
+using NativeFileDialogExtendedSharp;
 using Veldrid.Sdl2;
 using X_RayPalette.Views;
 using X_RayPalette.Helpers;
@@ -62,6 +63,7 @@ namespace X_RayPalette
         private readonly ImageRenderService _imageRenderOut;
         private readonly ImageRenderService _imageRenderLoading;
         public bool PathError;
+        private static bool showErrorPopup;
 
         public Gui(Sdl2Window windowCopy)
         {
@@ -129,7 +131,7 @@ namespace X_RayPalette
                 _infoChangeDoctor.Back();
                 _infoChangePatient.Back();
             };
-
+            showErrorPopup = false;
         }
 
         public void SubmitUi()
@@ -266,10 +268,9 @@ namespace X_RayPalette
                             ImGui.EndTabItem();
                         }
                     }
-                    if (ImGui.BeginTabItem("Dev")) //obviously will be moved in the future
+                    if (ImGui.BeginTabItem("Images Conversion"))
                     {
                         DevOpen = true;
-                        //to do: select or drop image here and convert to long rainbow
                         new ImagePicker("Select Image").OnPickedValid(path =>
                         {
                             //onpickedValid -> always valid path
@@ -294,7 +295,8 @@ namespace X_RayPalette
                         {
                             ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "Invalid file format");
                         }
-                        new Button("ConvertImage").OnClick(() =>
+                        ImGui.SameLine();
+                        new Button("Convert Image").OnClick(() =>
                         {
                             if (Path != null && !PathError)
                             {
@@ -303,6 +305,25 @@ namespace X_RayPalette
                                 thread.Start();
                                 ImagePathHelper.ImagesFolderPath();
                                 _imageHandlerLoading = _imageRenderLoading.Create(ImagePathHelper.ImagesFolderPath() + "\\loading.jpg");
+                            }
+
+                        }).Render();
+                        ImGui.SameLine();
+                        new Button("Save Image").OnClick(() =>
+                        {
+                            if (Path != null && !PathError)
+                            {
+                                NfdDialogResult path = Nfd.FileSave(InputFilterHelper.NfdFilter(), "untitled.png", "%USERPROFILE%\\Pictures");
+                                Console.WriteLine(path.Path);
+                                try
+                                {
+                                    File.Copy(ImagePathHelper.ImagesFolderPath() + "\\output.png", path.Path, overwrite: true);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"An error occurred: {ex.Message}");
+                                    showErrorPopup = true;
+                                }
                             }
 
                         }).Render();
@@ -320,6 +341,23 @@ namespace X_RayPalette
                                 ImGui.Image(this._imageHandlerLoading, ImageResizer.ResizeImage(new Vector2(_imageRenderLoading.Width, _imageRenderLoading.Height),100,100));
                             }
                         }
+                        
+                        if (showErrorPopup)
+                        {
+                            ImGui.OpenPopup("Error");
+
+                            if (ImGui.BeginPopupModal("Error", ref showErrorPopup, ImGuiWindowFlags.Popup|ImGuiWindowFlags.AlwaysAutoResize|ImGuiWindowFlags.Modal))
+                            {
+                                ImGui.Text("Try Converting Image!");
+                                if (ImGui.Button("OK"))
+                                {
+                                    ImGui.CloseCurrentPopup();
+                                    showErrorPopup = false;
+                                }
+                                ImGui.EndPopup();
+                            }
+                        }
+                        
                         ImGui.EndTabItem();
                     }
                 }

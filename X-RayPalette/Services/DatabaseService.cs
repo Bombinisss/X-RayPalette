@@ -194,7 +194,6 @@ namespace X_RayPalette.Services
                         reader.Close();
                         Globals.LoggedDoc = login;
                         Globals.LoggedDocID = Program.dbService.docNametoId(Globals.LoggedDoc);
-                        Console.WriteLine(Globals.LoggedDocID);
                         return true;
                     }
                 }
