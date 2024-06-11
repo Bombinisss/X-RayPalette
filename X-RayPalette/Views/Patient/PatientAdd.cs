@@ -53,18 +53,10 @@ namespace X_RayPalette.Views.Patient
         }
         public override void Render(bool isAdmin)
         {
-            ImGui.PushItemWidth(208);
-            ImGui.Text("Name: ");
-            ImGui.SameLine(110);
-            ImGui.InputText("##name##", ref _newPatientName, 128);
-            ImGui.SameLine();
-            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
 
-            ImGui.Text("Surname: ");
-            ImGui.SameLine(110);
-            ImGui.InputText("##surname##", ref _newPatientSurname, 128);
-            ImGui.SameLine();
-            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
+            // testing textInput components
+            new TextInput(_newPatientName,"##name##").IsRequired().Width(208).Title("Name:",110).OnInput((v)=> _newPatientName=v).Render();
+            new TextInput(_newPatientSurname, "##surname##").IsRequired().Width(208).Title("Surname:", 110).OnInput((v) => _newPatientSurname = v).Render();
 
             ImGui.Text("Sex: ");
             ImGui.SameLine(110);
@@ -73,50 +65,26 @@ namespace X_RayPalette.Views.Patient
             ImGui.SameLine(200);
             ImGui.RadioButton("Woman", ref _newPatientSex, 2);
 
-            ImGui.Text("PESEL: ");
-            ImGui.SameLine(110);
-            ImGui.InputText("##pesel##", ref _newPatientPesel, 11);
-            ImGui.SameLine();
-            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
-
-            ImGui.Text("E-mail: ");
-            ImGui.SameLine(110);
-            ImGui.InputText("##emailadress##", ref _newPatientEmail, 128);
+            new TextInput(_newPatientPesel, "##pesel##").MaxLength(11).IsRequired().Width(208).InputType(ImGuiInputTextFlags.CharsDecimal).Title("PESEL:", 110).OnInput((v) => _newPatientPesel = v).Render();
+            new TextInput(_newPatientEmail, "##emailadress##").Width(208).Title("E-mail:", 110).OnInput((v) => _newPatientEmail = v).Render();
 
             ImGui.Text("Phone: ");
             ImGui.SameLine(110);
             ImGui.PopItemWidth();
             new ComboBox<PhoneAreaCode>(_newPatientPhoneAreaCode, "##phoneArea", InputDataHelper.PhoneAreaCodes).Width(50).OnSelect((x) => _newPatientPhoneAreaCode = x).Render();
             ImGui.SameLine(0);
-            ImGui.PushItemWidth(150);
-            ImGui.InputText("##phone##", ref _newPatientPhone, 15, ImGuiInputTextFlags.CharsDecimal);
-            ImGui.SameLine();
-            ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A");
-            ImGui.PopItemWidth();
-
+            new TextInput(_newPatientPhone, "##phone##").Width(150).IsRequired().MaxLength(15).InputType(ImGuiInputTextFlags.CharsDecimal).OnInput((v) => _newPatientPhone = v).Render();
             ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "\u002A - required field");
 
             ImGui.PushItemWidth(208);
             ImGui.Text("Address");
             ImGui.Separator();
-            ImGui.Text("City: ");
-            ImGui.SameLine(110);
-            ImGui.InputText("##city##", ref _newPatientCity, 128);
-            ImGui.Text("Street: ");
-            ImGui.SameLine(110);
-            ImGui.InputText("##street##", ref _newPatientStreet, 128);
-            ImGui.Text("House number: ");
-            ImGui.SameLine(110);
-            ImGui.InputText("##house##", ref _newPatientHouseNumber, 5);
-            ImGui.Text("Flat number: ");
-            ImGui.SameLine(110);
-            ImGui.InputText("##flat##", ref _newPatientFlatNumber, 5);
-            ImGui.Text("Post code: ");
-            ImGui.SameLine(110);
-            ImGui.InputText("##post##", ref _newPatientPostCode, 6);
-            ImGui.Text("Country: ");
-            ImGui.SameLine(110);
-            ImGui.InputText("##country##", ref _newPatientCountry, 128);
+            new TextInput(_newPatientCity, "##city##").Width(208).Title("City:", 110).OnInput((v) => _newPatientCity = v).Render();
+            new TextInput(_newPatientStreet, "##street##").Width(208).Title("Street:", 110).OnInput((v) => _newPatientStreet = v).Render();
+            new TextInput(_newPatientHouseNumber, "##house##").Width(208).Title("House number:", 110).OnInput((v) => _newPatientHouseNumber = v).Render();
+            new TextInput(_newPatientFlatNumber, "##flat##").Width(208).Title("Flat number:", 110).OnInput((v) => _newPatientFlatNumber = v).Render();
+            new TextInput(_newPatientPostCode, "##post##").Width(208).Title("Post code:", 110).OnInput((v) => _newPatientPostCode = v).Render();
+            new TextInput(_newPatientCountry, "##country##").Width(208).Title("Country:", 110).OnInput((v) => _newPatientCountry = v).Render();
             ImGui.Separator();
             ImGui.PopItemWidth();
 
@@ -142,7 +110,7 @@ namespace X_RayPalette.Views.Patient
                 new ComboBox<string>(_tempdataDocAp, "##Doctorchoose##", _nameArray).OnSelect((string val) =>
                 {
                     _tempdataDocAp = val;
-                }).Width(350).Render();
+                }).Width(310).Render();
             }
             ImGui.NewLine();
             new Button("Add Patient").OnClick(() =>

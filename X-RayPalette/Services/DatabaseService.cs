@@ -1,6 +1,8 @@
 ﻿using Microsoft.VisualBasic;
 using MySql.Data.MySqlClient;
 using System.Dynamic;
+using System.Security.Cryptography;
+using X_RayPalette.Helpers;
 
 namespace X_RayPalette.Services
 {
@@ -97,11 +99,14 @@ namespace X_RayPalette.Services
         }
         public List<string> GetStringListFromExecSql(string sql, params object[] parameters)
         {
+            int i = 0;
             var reader = ExecuteFromSql(sql, parameters);
             List<string> result = new List<string>();
             while (reader.Read())
             {
-                result.Add(reader.GetString(0));
+                result.Add(reader.GetString(i));
+                i++;
+                Console.WriteLine( i);
             }
             reader.Close();
             return result;
@@ -187,6 +192,8 @@ namespace X_RayPalette.Services
                     {
                         var res = reader.GetString(0);
                         reader.Close();
+                        Globals.LoggedDoc = login;
+                        Globals.LoggedDocID = Program.dbService.docNametoId(Globals.LoggedDoc);
                         return true;
                     }
                 }

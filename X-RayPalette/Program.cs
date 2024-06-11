@@ -5,10 +5,6 @@ using ImGuiNET;
 using Veldrid;
 using Veldrid.Sdl2;
 using Veldrid.StartupUtilities;
-using NativeFileDialogExtendedSharp;
-using Veldrid.ImageSharp;
-using System.Drawing;
-using System.Drawing.Imaging;
 using X_RayPalette.Helpers;
 using X_RayPalette.Services;
 
@@ -53,10 +49,21 @@ namespace X_RayPalette
                 if (guiObject.DevOpen)
                 {
                     Console.WriteLine(dragDropEvent.File); //printing path to dropped file
-                    guiObject.ImagePathExist = true;
-                    guiObject.Path = dragDropEvent.File;
-                    guiObject.ImageHandler = _devRenderer.Create(guiObject.Path);
-                    guiObject.ConvertButton = false;
+                    string path = dragDropEvent.File;
+                    string extension = path.Substring(path.Length - 3).ToLower();
+                    if (extension == "jpg" || extension == "png" || extension == "bmp")
+                    {
+                        guiObject.ImagePathExist = true;
+                        guiObject.Path = dragDropEvent.File;
+                        guiObject.ImageHandler = _devRenderer.Create(guiObject.Path);
+                        guiObject.ImgSize = new(_devRenderer.Width, _devRenderer.Height);
+                        guiObject.ConvertButton = false;
+                    }
+                    else
+                    {
+                        guiObject.PathError = true;
+                    }
+
                 }
 
             };
