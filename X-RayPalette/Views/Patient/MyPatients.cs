@@ -1,9 +1,14 @@
 ﻿using ImGuiNET;
+using Microsoft.VisualBasic;
 using MySql.Data.MySqlClient;
+using NativeFileDialogExtendedSharp;
 using System.Numerics;
 using System.Reflection;
 using System.Text;
+using Vulkan;
+using X_RayPalette.Components;
 using X_RayPalette.Helpers;
+using X_RayPalette.Services;
 
 namespace X_RayPalette.Views.InfoChange
 {
@@ -14,7 +19,16 @@ namespace X_RayPalette.Views.InfoChange
         private string _tempSearch;
         private string _selectedPesel;
         byte[][] _selectedPatient = new byte[13][];
+        List<string[]> _selectedPatientImages = new List<string[]>();
         List<byte[][]> allData;
+
+        public Vector2 ImgSize;
+        public string ImgPath;
+        public IntPtr ImageHandler;
+        private readonly ImageRenderService _imageRender;
+        public bool ConvertButton;
+        public bool ImageImgPathExist;
+        public bool ImgPathError;
 
         public MyPatients()
         {
@@ -23,6 +37,7 @@ namespace X_RayPalette.Views.InfoChange
             _tempSearch = " ";
             _selectedPesel = "";
             allData = new List<byte[][]>();
+            _imageRender = new ImageRenderService();
         }
 
         public override void Back()
@@ -150,6 +165,7 @@ namespace X_RayPalette.Views.InfoChange
                             }
                             allReader.Close();
                             // Perform actions when a row is selected...
+                            FetchImages(_selectedPesel);
                         }
 
                         // Display text
@@ -196,6 +212,64 @@ namespace X_RayPalette.Views.InfoChange
                 ImGui.Text("Postal code: " + Encoding.ASCII.GetString(_selectedPatient[11]));
                 ImGui.Text("Country: " + Encoding.ASCII.GetString(_selectedPatient[12]));
                 ImGui.Separator();
+                ImGui.Text("Images");
+                new ImagePicker("Add Image").OnPickedValid(ImgPath =>
+                {
+                    //onpickedValid -> always valid ImgPath
+                    Console.WriteLine(ImgPath); //check image ImgPath
+                    ConvertButton = false;
+                    ImageImgPathExist = true;
+                    ImgPathError = false;
+                    ImgPath = ImgPath;
+                    string extension = ImgPath.Substring(ImgPath.Length - 3).ToLower();
+                    //get content from ImgPath as base64
+
+                    if (extension != "jpg" && extension != "png" && extension != "bmp")
+                    {
+                        ImgPathError = true;
+                    }
+                    else
+                    {
+                        byte[] imgBytes = File.ReadAllBytes(ImgPath);
+                        string base64 = Convert.ToBase64String(imgBytes);
+                        string fileName = Path.GetFileName(ImgPath);
+
+                        AddImage(_selectedPesel, base64, fileName);
+                        FetchImages(_selectedPesel);
+
+
+                        ImageHandler = _imageRender.Create(ImgPath);
+                        ImgSize = new(_imageRender.Width, _imageRender.Height);
+                    }
+
+                }).Render();
+                ImGui.Separator();
+                for (int i=0;i<_selectedPatientImages.Count; i++)
+                {
+                    var img = _selectedPatientImages[i];
+                    var id = img[0];
+                    var name = img[3];
+                    var content = img[2];
+                    var contentFrombase64 = Convert.FromBase64String(content);
+
+                    ImGui.Text(name);
+                    ImGui.SameLine();
+                    new Button("Download").OnClick(() =>
+                    {
+                        NfdDialogResult saveFileDialog= Nfd.FileSave(InputFilterHelper.NfdFilter(), name, "C:\\");
+                        if (saveFileDialog.Path != null)
+                        {
+                            File.WriteAllBytes(saveFileDialog.Path, Convert.FromBase64String(content));
+                        }
+
+                    }).Render();
+                    ImGui.SameLine();
+                    new Button("Delete").OnClick(() =>
+                    {
+                        DeleteImage(_selectedPesel, int.Parse(id));
+                        FetchImages(_selectedPesel);
+                    }).Render();
+                }
             }
             else
             {
@@ -209,6 +283,46 @@ namespace X_RayPalette.Views.InfoChange
         {
             ImGui.TableSetupColumn("Name", ImGuiTableColumnFlags.NoHeaderWidth, 3.5f);
             ImGui.TableSetupColumn("Surname", ImGuiTableColumnFlags.NoHeaderWidth, 3.5f);
+        }
+        private void FetchImages(string _patientPesel)
+        {
+            _selectedPatientImages.Clear();
+            var query = $"SELECT * FROM images WHERE user_id = '{_patientPesel}'";
+            var reader = Program.dbService.ExecuteFromSql(query);
+            while (reader.Read())
+            {
+                string[] row = new string[4];
+                for (int i = 0; i < 4; i++)
+                {
+                    if (i == 2)
+                    {
+                        row[i] = Encoding.ASCII.GetString(reader.GetValue(i) as byte[]);
+                        continue;
+                    }
+                    else
+                    {
+                        string cellValue = reader.GetValue(i).ToString();
+                        row[i] = cellValue;
+                    }
+                }
+
+                _selectedPatientImages.Add(row);
+            }
+            reader.Close();
+        }
+        private bool AddImage(string _patientPesel, string base64Img,string imgName)
+        {
+            var query = $"INSERT INTO images (user_id, data,name) VALUES (@p0,@p1,@p2)";
+            var result = Program.dbService.ExecuteFromSql(query, _patientPesel, base64Img,imgName);
+            result.Close();
+            return true;
+        }
+        private bool DeleteImage(string _patientPesel, int id)
+        {
+            var query = $"DELETE FROM images WHERE user_id = @p0 AND id = @p1";
+            var result = Program.dbService.ExecuteFromSql(query, _patientPesel, id);
+            result.Close();
+            return true;
         }
     }
 }
