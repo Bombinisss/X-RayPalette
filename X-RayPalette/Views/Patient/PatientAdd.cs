@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using X_RayPalette.Components;
 using X_RayPalette.Helpers;
+using System.Globalization;
 
 namespace X_RayPalette.Views.Patient
 {
@@ -26,7 +27,9 @@ namespace X_RayPalette.Views.Patient
         private string _newPatientFlatNumber;
         private string _newPatientPostCode;
         private string _newPatientCountry;
-
+        private bool _invalidData;
+        private bool _registeredMessage;
+        
         private string _tempdataDocAp;
 
         private PhoneAreaCode _newPatientPhoneAreaCode;
@@ -49,6 +52,8 @@ namespace X_RayPalette.Views.Patient
             _newPatientFlatNumber = "";
             _newPatientPostCode = "";
             _newPatientCountry = "";
+            _invalidData = false;
+            _registeredMessage = false;
             _newPatientPhoneAreaCode = InputDataHelper.PhoneAreaCodes.First();
         }
         public override void Render(bool isAdmin)
@@ -111,12 +116,15 @@ namespace X_RayPalette.Views.Patient
                     System.Console.WriteLine(_tempdataDocAp);
 
                     var isPeselInDB2 = Program.dbService.IsPESELInDB(_newPatientPesel);
-                    if (isPeselInDB2)
+                    if (isPeselInDB2 || !IsValidPesel(_newPatientPesel))
                     {
                         _newPatientPesel = "";
+                        _invalidData = true;
+                        Thread thread = new Thread(new ThreadStart(WaitAndSetFlag));
+                        thread.Start();
                     }
 
-                    if (_newPatientName != "" && _newPatientSurname != "" && _newPatientPesel != "" && _newPatientPhone != "")
+                    if (_newPatientName != "" && _newPatientSurname != "" && _newPatientPesel != "" && _newPatientPhone != "" && IsValidPesel(_newPatientPesel))
                     {
                         //to do: add to database DONE 
                         // to do: remained adding frontend validation ( backend validation already exsists) 
@@ -124,16 +132,21 @@ namespace X_RayPalette.Views.Patient
                         int LoggedId = Convert.ToInt32(InfSelectedDoc[0]);
                         var res = Program.dbService.ExecuteNonQuery("INSERT INTO `patient` (first_name, sur_name, sex, doctors_id, PESEL, email, phone, City, Street, House_number, Flat_number, Post_code, Country) " +
                         "VALUES('" + _newPatientName + "','" + _newPatientSurname + "','" + _newPatientSex + "', '" + LoggedId + "', '" + _newPatientPesel + "','" + _newPatientEmail + "','" + _newPatientPhone + "','" + _newPatientCity + "','" + _newPatientStreet + "','" + _newPatientHouseNumber + "','" + _newPatientFlatNumber + "','" + _newPatientPostCode + "','" + _newPatientCountry + "');");
-
+                        _registeredMessage = true;
+                        Thread thread = new Thread(new ThreadStart(WaitAndSetFlag));
+                        thread.Start();
                     }
 
                 }
                 var isPeselInDB = Program.dbService.IsPESELInDB(_newPatientPesel);
-                if (isPeselInDB)
+                if (isPeselInDB || !IsValidPesel(_newPatientPesel))
                 {
                     _newPatientPesel = "";
+                    _invalidData = true;
+                    Thread thread = new Thread(new ThreadStart(WaitAndSetFlag));
+                    thread.Start();
                 }
-
+                
                 if (_newPatientName != "" && _newPatientSurname != "" && _newPatientPesel != "" && _newPatientPhone != "")
                 {
                     //to do: add to database DONE 
@@ -141,9 +154,23 @@ namespace X_RayPalette.Views.Patient
                     int LoggedId = Program.dbService.docNametoId(Globals.LoggedDoc);
                     var res = Program.dbService.ExecuteNonQuery("INSERT INTO `patient` (first_name, sur_name, sex, doctors_id, PESEL, email, phone, City, Street, House_number, Flat_number, Post_code, Country) " +
                     "VALUES('" + _newPatientName + "','" + _newPatientSurname + "','" + _newPatientSex + "', '" + LoggedId + "', '" + _newPatientPesel + "','" + _newPatientEmail + "','" + _newPatientPhone + "','" + _newPatientCity + "','" + _newPatientStreet + "','" + _newPatientHouseNumber + "','" + _newPatientFlatNumber + "','" + _newPatientPostCode + "','" + _newPatientCountry + "');");
-
+                    _registeredMessage = true;
+                    Thread thread = new Thread(new ThreadStart(WaitAndSetFlag));
+                    thread.Start();
                 }
             }).Render();
+            
+            if (_invalidData && !_registeredMessage)
+            {
+                ImGui.SameLine();
+                ImGui.TextColored(new Vector4(0.8f, 0.20f, 0.20f, 0.90f), "Invalid Data");
+            }
+            
+            if (_registeredMessage)
+            {
+                ImGui.SameLine();
+                ImGui.TextColored(new Vector4(0.12f, 0.8f, 0.20f, 0.90f), "Registered");
+            }
 
             OnRenderEvent();
         }
@@ -152,6 +179,24 @@ namespace X_RayPalette.Views.Patient
         {
             _tempdataDocAp = "Choose Doctor";
             OnBackEvent();
+        }
+        
+        private void WaitAndSetFlag()
+        {
+            Thread.Sleep(5000);
+            
+            _registeredMessage = false;
+            _invalidData = false;
+        }
+
+        private bool IsValidPesel(string pesel)
+        {
+            if (pesel.Length != 11 || !pesel.All(char.IsDigit))
+            {
+                return false;
+            }
+            
+            return true;
         }
 
     }

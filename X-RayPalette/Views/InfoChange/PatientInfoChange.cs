@@ -158,6 +158,11 @@ namespace X_RayPalette.Views.InfoChange
 
             ImGui.Separator();
             new Button("Confirm changes").OnClick(() => SaveChanges(allData)).Render();
+            ImGui.SameLine();
+            new Button("Refresh").OnClick(() =>
+            {
+                _tempSearch = "     ";
+            }).Render();
         }
 
         private void SetupTableColumns()
