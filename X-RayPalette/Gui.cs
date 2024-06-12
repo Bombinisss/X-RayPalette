@@ -63,7 +63,6 @@ namespace X_RayPalette
         private readonly ImageRenderService _imageRenderOut;
         private readonly ImageRenderService _imageRenderLoading;
         public bool PathError;
-        private static bool showErrorPopup;
 
         public Gui(Sdl2Window windowCopy)
         {
@@ -131,7 +130,6 @@ namespace X_RayPalette
                 _infoChangeDoctor.Back();
                 _infoChangePatient.Back();
             };
-            showErrorPopup = false;
         }
 
         public void SubmitUi()
@@ -311,7 +309,7 @@ namespace X_RayPalette
                         ImGui.SameLine();
                         new Button("Save Image").OnClick(() =>
                         {
-                            if (Path != null && !PathError)
+                            if (File.Exists(ImagePathHelper.ImagesFolderPath() + "\\output.png") && Path != null && !PathError)
                             {
                                 NfdDialogResult path = Nfd.FileSave(InputFilterHelper.NfdFilter(), "untitled.png", "%USERPROFILE%\\Pictures");
                                 Console.WriteLine(path.Path);
@@ -321,8 +319,7 @@ namespace X_RayPalette
                                 }
                                 catch (Exception ex)
                                 {
-                                    Console.WriteLine($"An error occurred: {ex.Message}");
-                                    showErrorPopup = true;
+                                    // ignored
                                 }
                             }
 
@@ -339,22 +336,6 @@ namespace X_RayPalette
                             else if (ConvertButton)
                             {
                                 ImGui.Image(this._imageHandlerLoading, ImageResizer.ResizeImage(new Vector2(_imageRenderLoading.Width, _imageRenderLoading.Height),100,100));
-                            }
-                        }
-                        
-                        if (showErrorPopup)
-                        {
-                            ImGui.OpenPopup("Error");
-
-                            if (ImGui.BeginPopupModal("Error", ref showErrorPopup, ImGuiWindowFlags.Popup|ImGuiWindowFlags.AlwaysAutoResize|ImGuiWindowFlags.Modal))
-                            {
-                                ImGui.Text("Try Converting Image!");
-                                if (ImGui.Button("OK"))
-                                {
-                                    ImGui.CloseCurrentPopup();
-                                    showErrorPopup = false;
-                                }
-                                ImGui.EndPopup();
                             }
                         }
                         
