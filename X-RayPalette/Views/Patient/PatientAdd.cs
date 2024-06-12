@@ -88,15 +88,6 @@ namespace X_RayPalette.Views.Patient
             ImGui.Separator();
             ImGui.PopItemWidth();
 
-            if (!isAdmin)
-            {
-                ImGui.Text("Images");
-                ImGui.Separator();
-                // TODO: add file Popup and upload images
-                new Button("Upload Images").Render();
-                ImGui.Separator();             // TODO: display uploaded images
-            }
-
             if (isAdmin)
             {
                 List<string> _nameArray = new List<string>();
